@@ -2,7 +2,7 @@
 
 - [x] ECS Container service
 - [ ] Remove redundant resources
-- [-] ~~Logging on DB instance~~
+- [ ] ~~Logging on DB instance~~
 - [x] Tagging ECS instances
 - [x] LB DNS issue
 - [ ] Email conf bug

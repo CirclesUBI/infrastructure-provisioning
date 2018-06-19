@@ -1,4 +1,4 @@
-# Specify the provider and access details
+# AWS
 provider "aws" {
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
@@ -211,47 +211,6 @@ resource "aws_security_group" "instance_sg" {
   }
 }
 
-resource "aws_security_group" "db_sg" {
-  description = "controls direct access to db instances"
-  vpc_id      = "${aws_vpc.default.id}"
-  name        = "circles-rocketchat-dbsg"
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 22
-    to_port     = 22
-    cidr_blocks = ["0.0.0.0/0"]
-
-    # cidr_blocks = [
-    #   "${var.admin_cidr_ingress}",
-    # ]
-  }
-
-  ingress {
-    protocol  = "tcp"
-    from_port = "${var.mongo_port}"
-    to_port   = "${var.mongo_port}"
-
-    cidr_blocks = ["10.0.0.0/16"]
-
-    security_groups = [
-      "${aws_security_group.instance_sg.id}",
-    ]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags {
-    Name        = "${var.project_prefix}-db-sg"
-    Environment = "${var.environment}"
-  }
-}
-
 ## ECS
 
 resource "aws_ecs_cluster" "rocketchat" {
@@ -265,14 +224,12 @@ data "template_file" "rc_task_definition" {
   vars {
     log_group_region = "${var.aws_region}"
     log_group_name   = "${aws_cloudwatch_log_group.rocketchat.name}"
-
-    # mongo_url        = "mongodb://${module.rocketchat_mongodb.private_ip}:${var.mongo_port}/rocketchat"
-    mongo_url       = "mongodb://rocketchat:${var.mongo_password}@circles-test-cluster-shard-00-00-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-01-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-02-nh0rd.mongodb.net:27017/test?ssl=true&replicaSet=circles-test-cluster-shard-0&authSource=admin&retryWrites=true"
-    mongo_oplog_url = "mongodb://rocketchat-oplog:${var.mongo_oplog_password}@circles-test-cluster-shard-00-00-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-01-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-02-nh0rd.mongodb.net:27017/local?ssl=true&replicaSet=circles-test-cluster-shard-0&authSource=admin&retryWrites=true"
-    rocketchat_url  = "${aws_alb.rocketchat.dns_name}"
-    smtp_host       = "${var.smtp_host}"
-    smtp_username   = "${var.smtp_username}"
-    smtp_password   = "${var.smtp_password}"
+    mongo_url        = "mongodb://rocketchat:${var.mongo_password}@circles-test-cluster-shard-00-00-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-01-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-02-nh0rd.mongodb.net:27017/test?ssl=true&replicaSet=circles-test-cluster-shard-0&authSource=admin&retryWrites=true"
+    mongo_oplog_url  = "mongodb://rocketchat-oplog:${var.mongo_oplog_password}@circles-test-cluster-shard-00-00-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-01-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-02-nh0rd.mongodb.net:27017/local?ssl=true&replicaSet=circles-test-cluster-shard-0&authSource=admin&retryWrites=true"
+    rocketchat_url   = "${aws_alb.rocketchat.dns_name}"
+    smtp_host        = "${var.smtp_host}"
+    smtp_username    = "${var.smtp_username}"
+    smtp_password    = "${var.smtp_password}"
   }
 }
 
@@ -327,15 +284,6 @@ resource "aws_ecs_service" "ubibot" {
   cluster         = "${aws_ecs_cluster.rocketchat.id}"
   task_definition = "${aws_ecs_task_definition.ubibot.arn}"
   desired_count   = 1
-
-  # iam_role        = "${aws_iam_role.ecs_service.name}"
-
-
-  # load_balancer {
-  #   target_group_arn = "${aws_alb_target_group.ubibot.id}"
-  #   container_name   = "ubibot"
-  #   container_port   = "8080"
-  # }
 
   depends_on = [
     "aws_iam_role_policy.ecs_service",
@@ -422,7 +370,6 @@ data "template_file" "instance_profile" {
   vars {
     app_log_group_arn = "${aws_cloudwatch_log_group.rocketchat.arn}"
     ecs_log_group_arn = "${aws_cloudwatch_log_group.ecs.arn}"
-    db_log_group_arn  = "${aws_cloudwatch_log_group.db.arn}"
   }
 }
 
@@ -477,36 +424,3 @@ resource "aws_cloudwatch_log_group" "ecs" {
 resource "aws_cloudwatch_log_group" "rocketchat" {
   name = "${var.project_prefix}-rocketchat"
 }
-
-resource "aws_cloudwatch_log_group" "db" {
-  name = "${var.project_prefix}-rocketchat-mongodb"
-}
-
-# Database Instance
-
-
-# module "rocketchat_mongodb" {
-#   source         = "modules/rocketchat_db"
-#   name           = "${var.project_prefix}-rocketchat-mongodb"
-#   project_prefix = "${var.project_prefix}"
-
-
-#   # security_groups = "${list(aws_security_group.default.id, aws_security_group.allow_ssh.id)}"
-#   security_groups = ["${aws_security_group.db_sg.id}"]
-#   key_name        = "${aws_key_pair.circles_rocketchat.key_name}"
-#   aws_access_key  = "${var.access_key}"
-#   aws_secret_key  = "${var.secret_key}"
-#   mongo_port      = "${var.mongo_port}"
-
-
-#   # secrets_key = "circles-sealer-1"
-#   instance_profile_name = "${aws_iam_instance_profile.rocketchat.name}"
-#   vpc_id                = "${aws_vpc.default.id}"
-
-
-#   subnet_id = "${aws_subnet.public.0.id}"
-# }
-
-
-# Code deploy
-

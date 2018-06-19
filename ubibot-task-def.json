@@ -1,0 +1,83 @@
+[
+  {
+    "name": "ubibot",
+    "cpu": 25,
+    "memory": 256,
+    "image": "circlesubi/ubibot:latest",
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 8080,
+        "hostPort": 3001
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group_name}",
+        "awslogs-region": "${log_group_region}",
+        "awslogs-stream-prefix": "hubot",
+        "mode": "non-blocking"
+      }
+    },
+    "environment": [
+      {
+        "name": "ROCKETCHAT_URL",
+        "value": "http://${rocketchat_url}:80"
+      },
+      {
+        "name": "ROCKETCHAT_ROOM",
+        "value": "ubibot"
+      },
+      {
+        "name": "ROCKETCHAT_USER",
+        "value": "ubibot"
+      },
+      {
+        "name": "ROCKETCHAT_PASSWORD",
+        "value": "${ubibot_password}"
+      },
+      {
+        "name": "BOT_NAME",
+        "value": "ubibot"
+      },
+      {
+        "name": "HUBOT_LOG_LEVEL",
+        "value": "debug"
+      },
+      {
+        "name": "REDIS_URL",
+        "value": "redis://redis:6379/ubibot-brain"
+      }
+    ],
+    "links": [
+      "redis"
+    ]
+  },
+  {
+    "name": "redis",
+    "image": "redis:latest",
+    "cpu": 10,
+    "memory": 256,
+    "portMappings": [
+      {
+        "containerPort": 6379
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group_name}",
+        "awslogs-region": "${log_group_region}",
+        "awslogs-stream-prefix": "redis",
+        "mode": "non-blocking"
+      }
+    },
+    "mountPoints": [
+      {
+        "containerPath": "/data",
+        "sourceVolume": "redis"
+      }
+    ]
+  }
+]

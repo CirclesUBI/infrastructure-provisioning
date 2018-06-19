@@ -1,0 +1,62 @@
+[
+  {
+    "name": "rocketchat",
+    "cpu": 256,
+    "essential": true,
+    "image": "rocketchat/rocket.chat:latest",
+    "memory": 512,
+    "portMappings": [
+      {
+        "containerPort": 3000,
+        "hostPort": 80
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group_name}",
+        "awslogs-region": "${log_group_region}",
+        "awslogs-stream-prefix": "rocketchat"
+      }
+    },
+    "environment": [
+      {
+        "name": "MONGO_URL",
+        "value": "${mongo_url}"
+      },
+      {
+        "name": "MONGO_OPLOG_URL",
+        "value": "${mongo_oplog_url}"
+      },
+      {
+        "name": "ROOT_URL",
+        "value": "http://${rocketchat_url}"
+      },
+      {
+        "name": "OVERWRITE_SETTING_Site_Url",
+        "value": "http://${rocketchat_url}"
+      },
+      {
+        "name": "Accounts_UseDNSDomainCheck",
+        "value": "True"
+      },
+      {
+        "name": "SMTP_Host",
+        "value": "${smtp_host}"
+      },
+      {
+        "name": "SMTP_Username",
+        "value": "${smtp_username}"
+      },
+      {
+        "name": "SMTP_Password",
+        "value": "${smtp_password}"
+      },
+      {
+        "name": "MAIL_URL",
+        "value": "${smtp_host}"
+      }
+    ]
+  }
+]
+

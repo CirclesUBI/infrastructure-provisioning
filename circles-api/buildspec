@@ -1,0 +1,16 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:      
+      - echo Entered the pre_build phase...
+  build:
+    commands:
+      - echo Build started on `date`
+      - cd CodeDeployGitHubDemo
+      - zip ../example.zip main.js      
+  post_build:
+    commands:
+      - echo Build completed on `date`      
+artifacts:
+  files: example.zip

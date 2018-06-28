@@ -22,11 +22,11 @@
     "environment": [
       {
         "name": "MONGO_URL",
-        "value": "${mongo_url}"
+        "value": "mongodb://rocketchat:${mongo_password}@circles-rocketchat-shard-00-00-nh0rd.mongodb.net:27017,circles-rocketchat-shard-00-01-nh0rd.mongodb.net:27017,circles-rocketchat-shard-00-02-nh0rd.mongodb.net:27017/rocketchat?ssl=true&replicaSet=circles-rocketchat-shard-0&authSource=admin&retryWrites=true"
       },
       {
         "name": "MONGO_OPLOG_URL",
-        "value": "${mongo_oplog_url}"
+        "value": "mongodb://rocketchat-oplog:${mongo_oplog_password}@circles-rocketchat-shard-00-00-nh0rd.mongodb.net:27017,circles-rocketchat-shard-00-01-nh0rd.mongodb.net:27017,circles-rocketchat-shard-00-02-nh0rd.mongodb.net:27017/local?ssl=true&replicaSet=circles-rocketchat-shard-0&authSource=admin&retryWrites=true"
       },
       {
         "name": "ROOT_URL",

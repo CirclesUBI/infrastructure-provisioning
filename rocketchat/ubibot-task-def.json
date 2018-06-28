@@ -26,10 +26,6 @@
         "value": "http://${rocketchat_url}:80"
       },
       {
-        "name": "ROCKETCHAT_ROOM",
-        "value": "ubibot"
-      },
-      {
         "name": "ROCKETCHAT_USER",
         "value": "ubibot"
       },
@@ -38,17 +34,31 @@
         "value": "${ubibot_password}"
       },
       {
-        "name": "BOT_NAME",
-        "value": "ubibot"
-      },
-      {
         "name": "HUBOT_LOG_LEVEL",
         "value": "debug"
       },
       {
+        "name": "HUBOT_AUTH_ROLES",
+        "value": "admin=zgfuB2P5P2ErF6Nyr"         
+      },
+      {
         "name": "REDIS_URL",
         "value": "redis://redis:6379/ubibot-brain"
+      },
+      {
+        "name": "LISTEN_ON_ALL_PUBLIC",
+        "value": "false"
+      },
+      {
+        "name": "RESPOND_TO_DM",
+        "value": "true"
+      },
+      {
+        "name": "EXTERNAL_SCRIPTS",
+        "value": "moment,guid,hubot-diagnostics,hubot-help,hubot-rules,hubot-redis-brain,hubot-auth-persistent"
       }
+      
+      
     ],
     "links": [
       "redis"

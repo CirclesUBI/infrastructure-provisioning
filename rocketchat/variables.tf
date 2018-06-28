@@ -41,10 +41,6 @@ variable "asg_desired" {
   default     = "2"
 }
 
-variable "mongo_port" {
-  description = "MongoDB port"
-}
-
 variable "mongo_password" {
   description = "MongoDB password"
 }
@@ -52,10 +48,6 @@ variable "mongo_password" {
 variable "mongo_oplog_password" {
   description = "MongoDB oplog user password"
 }
-
-# variable "admin_cidr_ingress" {
-#   description = "CIDR to allow tcp/22 ingress to EC2 instance"
-# }
 
 variable "smtp_host" {
   description = "SMTP host"

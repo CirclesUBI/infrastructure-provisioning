@@ -118,7 +118,6 @@ resource "aws_key_pair" "circles_rocketchat" {
 
 resource "aws_launch_configuration" "rocketchat" {
   security_groups             = ["${aws_security_group.instance_sg.id}"]
-  name_prefix                 = "${var.project_prefix}-rocketchat-"
   key_name                    = "${aws_key_pair.circles_rocketchat.key_name}"
   image_id                    = "${data.aws_ami.stable_coreos.id}"            //"ami-10e6c8fb"
   instance_type               = "t2.small"
@@ -222,14 +221,14 @@ data "template_file" "rc_task_definition" {
   depends_on = ["aws_alb.rocketchat"]
 
   vars {
-    log_group_region = "${var.aws_region}"
-    log_group_name   = "${aws_cloudwatch_log_group.rocketchat.name}"
-    mongo_url        = "mongodb://rocketchat:${var.mongo_password}@circles-test-cluster-shard-00-00-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-01-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-02-nh0rd.mongodb.net:27017/test?ssl=true&replicaSet=circles-test-cluster-shard-0&authSource=admin&retryWrites=true"
-    mongo_oplog_url  = "mongodb://rocketchat-oplog:${var.mongo_oplog_password}@circles-test-cluster-shard-00-00-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-01-nh0rd.mongodb.net:27017,circles-test-cluster-shard-00-02-nh0rd.mongodb.net:27017/local?ssl=true&replicaSet=circles-test-cluster-shard-0&authSource=admin&retryWrites=true"
-    rocketchat_url   = "${aws_alb.rocketchat.dns_name}"
-    smtp_host        = "${var.smtp_host}"
-    smtp_username    = "${var.smtp_username}"
-    smtp_password    = "${var.smtp_password}"
+    log_group_region     = "${var.aws_region}"
+    log_group_name       = "${aws_cloudwatch_log_group.rocketchat.name}"
+    mongo_password       = "${var.mongo_password}"
+    mongo_oplog_password = "${var.mongo_oplog_password}"
+    rocketchat_url       = "${aws_alb.rocketchat.dns_name}"
+    smtp_host            = "${var.smtp_host}"
+    smtp_username        = "${var.smtp_username}"
+    smtp_password        = "${var.smtp_password}"
   }
 }
 

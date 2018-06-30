@@ -1,6 +1,19 @@
+variable "access_key" {
+  description = "AWS access key"
+}
+
+variable "secret_key" {
+  description = "AWS secret access key"
+}
+
+variable "aws_region" {
+  description = "The AWS region to create things in."
+  default     = "eu-central-1"
+}
+
 variable "project_prefix" {
   description = "Name prefix for resources."
-  default     = "circles-backend"
+  default     = "circles-api"
 }
 
 variable "environment" {

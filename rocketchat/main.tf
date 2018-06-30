@@ -1,8 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "circles-rocketchat-terraform"
-    region = "eu-central-1"
-
+    bucket         = "circles-rocketchat-terraform"
+    region         = "eu-central-1"
     key            = "circles-rocketchat-terraform.tfstate"
     dynamodb_table = "circles-rocketchat-terraform"
     encrypt        = true

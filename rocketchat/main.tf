@@ -1,3 +1,14 @@
+terraform {
+  backend "s3" {
+    bucket = "circles-rocketchat-terraform"
+    region = "eu-central-1"
+
+    key            = "circles-rocketchat-terraform.tfstate"
+    dynamodb_table = "circles-rocketchat-terraform"
+    encrypt        = true
+  }
+}
+
 # AWS
 provider "aws" {
   access_key = "${var.access_key}"

@@ -15,6 +15,25 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
+data "aws_acm_certificate" "chat_joincircles" {
+  domain   = "chat.joincircles.net"
+  statuses = ["ISSUED"]
+}
+
+## Storage
+
+resource "aws_s3_bucket" "circles_ubibot_backup" {
+  bucket = "circles-ubibot-backup"
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_object" "ubibot_redis_dump" {
+  key                    = "dump.rdb"
+  bucket                 = "${aws_s3_bucket.circles_ubibot_backup.id}"
+  source                 = "state-files/dump.rdb"
+  server_side_encryption = "AES256"
+}
+
 ## EC2
 data "aws_ami" "stable_coreos" {
   most_recent = true
@@ -155,6 +174,13 @@ resource "aws_security_group" "lb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port = 0
     to_port   = 0
@@ -176,17 +202,16 @@ resource "aws_security_group" "instance_sg" {
   vpc_id      = "${aws_vpc.default.id}"
   name        = "circles-rocketchat-instsg"
 
-  ingress {
-    protocol    = "tcp"
-    from_port   = 22
-    to_port     = 22
-    cidr_blocks = ["0.0.0.0/0"]
+  # ingress {
+  #   protocol    = "tcp"
+  #   from_port   = 22
+  #   to_port     = 22
+  #   cidr_blocks = ["0.0.0.0/0"]
 
-    # cidr_blocks = [
-    #   "${var.admin_cidr_ingress}",
-    # ]
-  }
-
+  # cidr_blocks = [
+  #   "${var.admin_cidr_ingress}",
+  # ]
+  #}
   ingress {
     protocol  = "tcp"
     from_port = 80
@@ -196,24 +221,21 @@ resource "aws_security_group" "instance_sg" {
       "${aws_security_group.lb_sg.id}",
     ]
   }
-
   ingress {
     protocol  = "tcp"
-    from_port = 8081
-    to_port   = 8081
+    from_port = 443
+    to_port   = 443
 
     security_groups = [
       "${aws_security_group.lb_sg.id}",
     ]
   }
-
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   tags {
     Name        = "${var.project_prefix}-instance-sg"
     Environment = "${var.environment}"
@@ -247,10 +269,12 @@ data "template_file" "ubibot_task_definition" {
   depends_on = ["aws_ecs_service.rocketchat", "aws_alb.rocketchat"]
 
   vars {
-    log_group_region = "${var.aws_region}"
-    log_group_name   = "${aws_cloudwatch_log_group.rocketchat.name}"
-    rocketchat_url   = "${aws_alb.rocketchat.dns_name}"
-    ubibot_password  = "${var.ubibot_password}"
+    access_key      = "${var.access_key}"
+    secret_key      = "${var.secret_key}"
+    aws_region      = "${var.aws_region}"
+    log_group_name  = "${aws_cloudwatch_log_group.rocketchat.name}"
+    rocketchat_url  = "${aws_alb.rocketchat.dns_name}"
+    ubibot_password = "${var.ubibot_password}"
   }
 }
 
@@ -284,7 +308,8 @@ resource "aws_ecs_service" "rocketchat" {
 
   depends_on = [
     "aws_iam_role_policy.ecs_service",
-    "aws_alb_listener.rocketchat",
+    "aws_alb_listener.rocketchat_http",
+    "aws_alb_listener.rocketchat_https",
   ]
 }
 
@@ -296,7 +321,8 @@ resource "aws_ecs_service" "ubibot" {
 
   depends_on = [
     "aws_iam_role_policy.ecs_service",
-    "aws_alb_listener.rocketchat",
+    "aws_alb_listener.rocketchat_http",
+    "aws_alb_listener.rocketchat_https",
     "aws_ecs_service.rocketchat",
   ]
 }
@@ -392,9 +418,13 @@ resource "aws_iam_role_policy" "instance" {
 
 resource "aws_alb_target_group" "rocketchat" {
   name     = "rocketchat-alb-tg"
-  port     = 80
+  port     = "80"
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.default.id}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
   tags {
     Name        = "${var.project_prefix}-rocketchat-alb-tg"
@@ -403,9 +433,10 @@ resource "aws_alb_target_group" "rocketchat" {
 }
 
 resource "aws_alb" "rocketchat" {
-  name            = "rocketchat-alb"
-  subnets         = ["${aws_subnet.public.*.id}"]
-  security_groups = ["${aws_security_group.lb_sg.id}"]
+  name                       = "rocketchat-alb"
+  subnets                    = ["${aws_subnet.public.*.id}"]
+  security_groups            = ["${aws_security_group.lb_sg.id}"]
+  enable_deletion_protection = true
 
   tags {
     Name        = "${var.project_prefix}-rocketchat-alb"
@@ -415,8 +446,36 @@ resource "aws_alb" "rocketchat" {
 
 resource "aws_alb_listener" "rocketchat" {
   load_balancer_arn = "${aws_alb.rocketchat.id}"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${data.aws_acm_certificate.chat_joincircles.arn}"
+
+  default_action {
+    target_group_arn = "${aws_alb_target_group.rocketchat.id}"
+    type             = "forward"
+  }
+}
+
+resource "aws_alb_listener" "rocketchat_http" {
+  load_balancer_arn = "${aws_alb.rocketchat.id}"
   port              = "80"
   protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_alb_target_group.rocketchat.id}"
+    type             = "forward"
+  }
+}
+
+resource "aws_alb_listener" "rocketchat_https" {
+  load_balancer_arn = "${aws_alb.rocketchat.id}"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${data.aws_acm_certificate.chat_joincircles.arn}"
+
+  #"arn:aws:acm:us-east-1:183869895864:certificate/ad06733a-c9f4-4f9b-9c1e-14d2d3dd715f"
 
   default_action {
     target_group_arn = "${aws_alb_target_group.rocketchat.id}"

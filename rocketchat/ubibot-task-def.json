@@ -15,7 +15,7 @@
       "logDriver": "awslogs",
       "options": {
         "awslogs-group": "${log_group_name}",
-        "awslogs-region": "${log_group_region}",
+        "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "hubot",
         "mode": "non-blocking"
       }
@@ -69,6 +69,10 @@
     "image": "redis:latest",
     "cpu": 10,
     "memory": 256,
+    "entryPoint": [
+      "bash"
+    ],    
+    "command": ["-c", "sleep 3 && redis-server"],
     "portMappings": [
       {
         "containerPort": 6379
@@ -78,11 +82,47 @@
       "logDriver": "awslogs",
       "options": {
         "awslogs-group": "${log_group_name}",
-        "awslogs-region": "${log_group_region}",
+        "awslogs-region": "${aws_region}",
         "awslogs-stream-prefix": "redis",
         "mode": "non-blocking"
       }
     },
+    "mountPoints": [
+      {
+        "containerPath": "/data",
+        "sourceVolume": "redis"
+      }
+    ]
+  },
+  {
+    "name": "s3vol",
+    "image": "elementar/s3-volume:latest",
+    "command": ["/data", "s3://circles-ubibot-backup"],
+    "cpu": 10,
+    "memory": 64,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group_name}",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "s3vol",
+        "mode": "non-blocking"
+      }
+    },
+    "environment": [
+      {
+        "name": "AWS_ACCESS_KEY_ID",
+        "value": "${access_key}"
+      },
+      {
+        "name": "AWS_SECRET_ACCESS_KEY",
+        "value": "${secret_key}"
+      },
+      {
+        "name": "AWS_DEFAULT_REGION",
+        "value": "${aws_region}"
+      }
+    ],
     "mountPoints": [
       {
         "containerPath": "/data",

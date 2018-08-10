@@ -100,8 +100,8 @@ resource "aws_codebuild_project" "api" {
   }
   source {
     type            = "GITHUB"
-    location        = "https://github.com/CirclesUBI/circles-api"
-    git_clone_depth = 1
+    location        = "https://github.com/CirclesUBI/circles-api/tree/codebuild"
+    git_clone_depth = 3
   }
   tags {
     Name        = "${var.project_prefix}-api-project"

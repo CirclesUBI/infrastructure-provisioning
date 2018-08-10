@@ -96,6 +96,11 @@ resource "aws_route_table" "default" {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.default.id}"
   }
+
+  tags {
+    Name        = "${var.project_prefix}-route-table"
+    Environment = "${var.environment}"
+  }
 }
 
 resource "aws_route_table_association" "default" {
@@ -202,16 +207,6 @@ resource "aws_security_group" "instance_sg" {
   vpc_id      = "${aws_vpc.default.id}"
   name        = "circles-rocketchat-instsg"
 
-  # ingress {
-  #   protocol    = "tcp"
-  #   from_port   = 22
-  #   to_port     = 22
-  #   cidr_blocks = ["0.0.0.0/0"]
-
-  # cidr_blocks = [
-  #   "${var.admin_cidr_ingress}",
-  # ]
-  #}
   ingress {
     protocol  = "tcp"
     from_port = 80
@@ -221,6 +216,7 @@ resource "aws_security_group" "instance_sg" {
       "${aws_security_group.lb_sg.id}",
     ]
   }
+
   ingress {
     protocol  = "tcp"
     from_port = 443
@@ -230,12 +226,14 @@ resource "aws_security_group" "instance_sg" {
       "${aws_security_group.lb_sg.id}",
     ]
   }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   tags {
     Name        = "${var.project_prefix}-instance-sg"
     Environment = "${var.environment}"
@@ -269,12 +267,16 @@ data "template_file" "ubibot_task_definition" {
   depends_on = ["aws_ecs_service.rocketchat", "aws_alb.rocketchat"]
 
   vars {
-    access_key      = "${var.access_key}"
-    secret_key      = "${var.secret_key}"
-    aws_region      = "${var.aws_region}"
-    log_group_name  = "${aws_cloudwatch_log_group.rocketchat.name}"
-    rocketchat_url  = "${aws_alb.rocketchat.dns_name}"
-    ubibot_password = "${var.ubibot_password}"
+    access_key             = "${var.access_key}"
+    secret_key             = "${var.secret_key}"
+    aws_region             = "${var.aws_region}"
+    log_group_name         = "${aws_cloudwatch_log_group.rocketchat.name}"
+    rocketchat_url         = "${aws_alb.rocketchat.dns_name}"
+    ubibot_password        = "${var.ubibot_password}"
+    ubibot_github_user     = "${var.ubibot_github_user}"
+    ubibot_github_password = "${var.ubibot_github_password}"
+    redis_commander_user   = "${var.redis_commander_user}"
+    redis_commander_pass   = "${var.redis_commander_pass}"
   }
 }
 
@@ -294,11 +296,13 @@ resource "aws_ecs_task_definition" "ubibot" {
 }
 
 resource "aws_ecs_service" "rocketchat" {
-  name            = "rocketchat-ecs-service"
-  cluster         = "${aws_ecs_cluster.rocketchat.id}"
-  task_definition = "${aws_ecs_task_definition.rocketchat.arn}"
-  desired_count   = "${var.asg_desired}"
-  iam_role        = "${aws_iam_role.ecs_service.name}"
+  name                               = "rocketchat-ecs-service"
+  cluster                            = "${aws_ecs_cluster.rocketchat.id}"
+  task_definition                    = "${aws_ecs_task_definition.rocketchat.arn}"
+  desired_count                      = "${var.asg_desired}"
+  iam_role                           = "${aws_iam_role.ecs_service.name}"
+  deployment_maximum_percent         = "100"
+  deployment_minimum_healthy_percent = "50"
 
   load_balancer {
     target_group_arn = "${aws_alb_target_group.rocketchat.id}"
@@ -475,8 +479,6 @@ resource "aws_alb_listener" "rocketchat_https" {
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = "${data.aws_acm_certificate.chat_joincircles.arn}"
 
-  #"arn:aws:acm:us-east-1:183869895864:certificate/ad06733a-c9f4-4f9b-9c1e-14d2d3dd715f"
-
   default_action {
     target_group_arn = "${aws_alb_target_group.rocketchat.id}"
     type             = "forward"
@@ -486,9 +488,21 @@ resource "aws_alb_listener" "rocketchat_https" {
 ## CloudWatch Logs
 
 resource "aws_cloudwatch_log_group" "ecs" {
-  name = "${var.project_prefix}-ecs-agent"
+  name              = "${var.project_prefix}-rocketchat-ecs"
+  retention_in_days = "60"
+
+  tags {
+    Name        = "${var.project_prefix}-rocketchat-ecs"
+    Environment = "dev"
+  }
 }
 
 resource "aws_cloudwatch_log_group" "rocketchat" {
-  name = "${var.project_prefix}-rocketchat"
+  name              = "${var.project_prefix}-rocketchat"
+  retention_in_days = "60"
+
+  tags {
+    Name        = "${var.project_prefix}-rocketchat"
+    Environment = "dev"
+  }
 }

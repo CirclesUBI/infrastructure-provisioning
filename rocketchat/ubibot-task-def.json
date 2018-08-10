@@ -56,9 +56,15 @@
       {
         "name": "EXTERNAL_SCRIPTS",
         "value": "moment,guid,hubot-diagnostics,hubot-help,hubot-rules,hubot-redis-brain,hubot-auth-persistent"
-      }
-      
-      
+      },
+      {
+        "name": "GITHUB_USER",
+        "value": "${ubibot_github_user}"
+      },
+      {
+        "name": "GITHUB_PASS",
+        "value": "${ubibot_github_password}"
+      }      
     ],
     "links": [
       "redis"
@@ -75,7 +81,8 @@
     "command": ["-c", "sleep 3 && redis-server"],
     "portMappings": [
       {
-        "containerPort": 6379
+        "containerPort": 6379,
+        "hostPort": 6379
       }
     ],
     "logConfiguration": {
@@ -92,6 +99,49 @@
         "containerPath": "/data",
         "sourceVolume": "redis"
       }
+    ]
+  },
+  {
+    "name": "redis-commander",
+    "image": "rediscommander/redis-commander:latest",
+    "cpu": 10,
+    "memory": 256,   
+    "portMappings": [
+      {
+        "containerPort": 8081,
+        "hostPort": 8081
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group_name}",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "redis-commander",
+        "mode": "non-blocking"
+      }
+    },
+    "environment": [
+      {
+        "name": "REDIS_HOST",
+        "value": "redis"
+      },
+      {
+        "name": "REDIS_PORT",
+        "value": "6379"
+      },
+      {
+        "name": "HTTP_USER",
+        "value": "${redis_commander_user}"
+      },
+      {
+        "name": "HTTP_PASSWORD",
+        "value": "${redis_commander_pass}"
+      }
+
+    ],
+    "links": [
+      "redis:redis"
     ]
   },
   {

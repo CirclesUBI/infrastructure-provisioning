@@ -64,3 +64,19 @@ variable "smtp_password" {
 variable "ubibot_password" {
   description = "ubibot password"
 }
+
+variable "ubibot_github_user" {
+  description = "ubibot github username"
+}
+
+variable "ubibot_github_password" {
+  description = "ubibot github password"
+}
+
+variable "redis_commander_user" {
+  description = "redis commander user"
+}
+
+variable "redis_commander_pass" {
+  description = "redis commander password"
+}

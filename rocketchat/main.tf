@@ -20,20 +20,6 @@ data "aws_acm_certificate" "chat_joincircles" {
   statuses = ["ISSUED"]
 }
 
-## Storage
-
-resource "aws_s3_bucket" "circles_ubibot_backup" {
-  bucket = "circles-ubibot-backup"
-  acl    = "private"
-}
-
-resource "aws_s3_bucket_object" "ubibot_redis_dump" {
-  key                    = "dump.rdb"
-  bucket                 = "${aws_s3_bucket.circles_ubibot_backup.id}"
-  source                 = "state-files/dump.rdb"
-  server_side_encryption = "AES256"
-}
-
 ## EC2
 data "aws_ami" "stable_coreos" {
   most_recent = true
@@ -446,6 +432,20 @@ resource "aws_alb" "rocketchat" {
     Name        = "${var.project_prefix}-rocketchat-alb"
     Environment = "${var.environment}"
   }
+}
+
+resource "aws_app_cookie_stickiness_policy" "rocketchat_http" {
+  name          = "rocketchat-http-cookie-policy"
+  load_balancer = "${aws_alb.rocketchat.name}"
+  lb_port       = 80
+  cookie_name   = "RocketchatCookie80"
+}
+
+resource "aws_app_cookie_stickiness_policy" "rocketchat_https" {
+  name          = "rocketchat-https-cookie-policy"
+  load_balancer = "${aws_alb.rocketchat.name}"
+  lb_port       = 443
+  cookie_name   = "RocketchatCookie443"
 }
 
 resource "aws_alb_listener" "rocketchat" {

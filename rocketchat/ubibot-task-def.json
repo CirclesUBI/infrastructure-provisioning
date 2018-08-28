@@ -34,10 +34,6 @@
         "value": "${ubibot_password}"
       },
       {
-        "name": "HUBOT_LOG_LEVEL",
-        "value": "debug"
-      },
-      {
         "name": "HUBOT_AUTH_ROLES",
         "value": "admin=zgfuB2P5P2ErF6Nyr"         
       },
@@ -100,50 +96,7 @@
         "sourceVolume": "redis"
       }
     ]
-  },
-  {
-    "name": "redis-commander",
-    "image": "rediscommander/redis-commander:latest",
-    "cpu": 10,
-    "memory": 256,   
-    "portMappings": [
-      {
-        "containerPort": 8081,
-        "hostPort": 8081
-      }
-    ],
-    "logConfiguration": {
-      "logDriver": "awslogs",
-      "options": {
-        "awslogs-group": "${log_group_name}",
-        "awslogs-region": "${aws_region}",
-        "awslogs-stream-prefix": "redis-commander",
-        "mode": "non-blocking"
-      }
-    },
-    "environment": [
-      {
-        "name": "REDIS_HOST",
-        "value": "redis"
-      },
-      {
-        "name": "REDIS_PORT",
-        "value": "6379"
-      },
-      {
-        "name": "HTTP_USER",
-        "value": "${redis_commander_user}"
-      },
-      {
-        "name": "HTTP_PASSWORD",
-        "value": "${redis_commander_pass}"
-      }
-
-    ],
-    "links": [
-      "redis:redis"
-    ]
-  },
+  },  
   {
     "name": "s3vol",
     "image": "elementar/s3-volume:latest",

@@ -416,6 +416,10 @@ resource "aws_alb_target_group" "rocketchat" {
     create_before_destroy = true
   }
 
+  stickiness {
+    type = "lb_cookie"
+  }
+
   tags {
     Name        = "${var.project_prefix}-rocketchat-alb-tg"
     Environment = "${var.environment}"
@@ -432,20 +436,6 @@ resource "aws_alb" "rocketchat" {
     Name        = "${var.project_prefix}-rocketchat-alb"
     Environment = "${var.environment}"
   }
-}
-
-resource "aws_app_cookie_stickiness_policy" "rocketchat_http" {
-  name          = "rocketchat-http-cookie-policy"
-  load_balancer = "${aws_alb.rocketchat.name}"
-  lb_port       = 80
-  cookie_name   = "RocketchatCookie80"
-}
-
-resource "aws_app_cookie_stickiness_policy" "rocketchat_https" {
-  name          = "rocketchat-https-cookie-policy"
-  load_balancer = "${aws_alb.rocketchat.name}"
-  lb_port       = 443
-  cookie_name   = "RocketchatCookie443"
 }
 
 resource "aws_alb_listener" "rocketchat" {

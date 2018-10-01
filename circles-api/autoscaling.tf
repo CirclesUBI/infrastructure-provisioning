@@ -47,23 +47,3 @@ resource "aws_appautoscaling_policy" "api_down" {
 
   depends_on = ["aws_appautoscaling_target.circles_api"]
 }
-
-/* metric used for auto scale */
-resource "aws_cloudwatch_metric_alarm" "api_cpu_high" {
-  alarm_name          = "${var.project_prefix}-cpu-utilization-high"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/ECS"
-  period              = "60"
-  statistic           = "Maximum"
-  threshold           = "85"
-
-  dimensions {
-    ClusterName = "${aws_ecs_cluster.circles_api.name}"
-    ServiceName = "${aws_ecs_service.circles_api.name}"
-  }
-
-  alarm_actions = ["${aws_appautoscaling_policy.api_up.arn}"]
-  ok_actions    = ["${aws_appautoscaling_policy.api_down.arn}"]
-}

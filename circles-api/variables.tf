@@ -13,7 +13,6 @@ variable "aws_region" {
 
 variable "circles-backend-vpc-id" {
   description = "Default circles backend VPC Id"
-  default = "vpc-0eb618a49750832bc"
 }
 
 variable "project_prefix" {

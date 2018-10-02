@@ -38,7 +38,7 @@ resource "aws_security_group" "web_inbound_sg" {
 
 resource "aws_alb" "circles_api" {
   name            = "${var.project_prefix}-alb"
-  subnets         = ["${var.public_subnet_ids}"]
+  subnets         = ["${aws_subnet.public_subnet.*.id}"]
   security_groups = ["${var.security_groups_ids}", "${aws_security_group.web_inbound_sg.id}"]
 
   tags {

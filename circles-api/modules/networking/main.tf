@@ -2,32 +2,15 @@
 
 data "aws_availability_zones" "available" {}
 
-
-/*====
-Subnets
-======*/
-/* Internet gateway for the public subnet */
-resource "aws_internet_gateway" "circles_api" {
-  vpc_id = "${var.vpc_id}"
-
-  tags {
-    Name        = "${var.project_prefix}-igw"
-    Environment = "${var.environment}"
-  }
-}
-
-
 /* Elastic IP for NAT */
 resource "aws_eip" "circles_api" {
   vpc        = true
-  depends_on = ["aws_internet_gateway.circles_api"]
 }
 
 /* NAT */
 resource "aws_nat_gateway" "circles_api" {
   allocation_id = "${aws_eip.circles_api.id}"
   subnet_id     = "${element(aws_subnet.public_subnet.*.id, 0)}"
-  depends_on    = ["aws_internet_gateway.circles_api"]
 
   tags {
     Name        = "${var.project_prefix}-${element(var.availability_zones, count.index)}-nat"
@@ -86,7 +69,7 @@ resource "aws_route_table" "public" {
 resource "aws_route" "public_internet_gateway" {
   route_table_id         = "${aws_route_table.public.id}"
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = "${aws_internet_gateway.circles_api.id}"
+  gateway_id             = "${var.igw_id}"
 }
 
 resource "aws_route" "private_nat_gateway" {

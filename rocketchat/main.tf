@@ -48,6 +48,8 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
+  # IPv4 CIDR IP/CIDR	  Δ to last IP addr	  Mask	            Hosts(*)	Class
+  # a.b.0.0/16	        +0.0.255.255	      255.255.000.000	  65,536	  256 C = 1 B
 
   tags {
     Name        = "${var.project_prefix}-vpc"

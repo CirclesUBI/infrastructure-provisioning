@@ -1,10 +1,11 @@
-variable "vpc_cidr" {
-  description = "The CIDR block of the vpc"
-}
-
 variable "vpc_id" {
   description = "The id of the vpc"
 }
+
+variable "igw_id" {
+  description = "The id of the internet gateway."
+}
+
 
 variable "public_subnets_cidr" {
   type        = "list"
@@ -18,12 +19,10 @@ variable "private_subnets_cidr" {
 
 variable "project_prefix" {
   description = "Name prefix for resources."
-  default     = "circles-api"
 }
 
 variable "environment" {
   description = "Environment setting."
-  default     = "dev"
 }
 
 variable "region" {
@@ -35,6 +34,3 @@ variable "availability_zones" {
   description = "The az that the resources will be launched"
 }
 
-variable "key_name" {
-  description = "The public key for the bastion host"
-}

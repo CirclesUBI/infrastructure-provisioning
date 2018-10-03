@@ -2,17 +2,13 @@
 
 data "aws_availability_zones" "available" {}
 
-data "aws_vpc" "circles_backend" {
-  id = "${var.circles-backend-vpc-id}"
-}
-
 
 /*====
 Subnets
 ======*/
 /* Internet gateway for the public subnet */
 resource "aws_internet_gateway" "circles_api" {
-  vpc_id = "${aws_vpc.circles_backend.id}"
+  vpc_id = "${var.vpc_id}"
 
   tags {
     Name        = "${var.project_prefix}-igw"
@@ -41,7 +37,7 @@ resource "aws_nat_gateway" "circles_api" {
 
 /* Public subnet */
 resource "aws_subnet" "public_subnet" {
-  vpc_id                  = "${aws_vpc.circles_backend.id}"
+  vpc_id                  = "${var.vpc_id}"
   count                   = "${length(var.public_subnets_cidr)}"
   cidr_block              = "${element(var.public_subnets_cidr, count.index)}"
   availability_zone       = "${element(var.availability_zones, count.index)}"
@@ -55,7 +51,7 @@ resource "aws_subnet" "public_subnet" {
 
 /* Private subnet */
 resource "aws_subnet" "private_subnet" {
-  vpc_id                  = "${aws_vpc.circles_backend.id}"
+  vpc_id                  = "${var.vpc_id}"
   count                   = "${length(var.private_subnets_cidr)}"
   cidr_block              = "${element(var.private_subnets_cidr, count.index)}"
   availability_zone       = "${element(var.availability_zones, count.index)}"
@@ -69,7 +65,7 @@ resource "aws_subnet" "private_subnet" {
 
 /* Routing table for private subnet */
 resource "aws_route_table" "private" {
-  vpc_id = "${aws_vpc.circles_backend.id}"
+  vpc_id = "${var.vpc_id}"
 
   tags {
     Name        = "${var.project_prefix}-private-route-table"
@@ -79,7 +75,7 @@ resource "aws_route_table" "private" {
 
 /* Routing table for public subnet */
 resource "aws_route_table" "public" {
-  vpc_id = "${aws_vpc.circles_backend.id}"
+  vpc_id = "${var.vpc_id}"
 
   tags {
     Name        = "${var.project_prefix}-public-route-table"
@@ -118,8 +114,7 @@ VPC's Default Security Group
 resource "aws_security_group" "default" {
   name        = "${var.environment}-default-sg"
   description = "Default security group to allow inbound/outbound from the VPC"
-  vpc_id      = "${aws_vpc.circles_backend.id}"
-  depends_on  = ["aws_vpc.circles_backend"]
+  vpc_id      = "${var.vpc_id}"
 
   ingress {
     from_port = "0"

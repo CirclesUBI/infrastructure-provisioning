@@ -11,8 +11,8 @@ variable "aws_region" {
   default     = "eu-central-1"
 }
 
-variable "circles-backend-vpc-id" {
-  description = "Default circles backend VPC Id"
+variable "circles_backend_vpc_id" {
+  description = "The Circles backend VPC to create resources in."  
 }
 
 variable "project_prefix" {

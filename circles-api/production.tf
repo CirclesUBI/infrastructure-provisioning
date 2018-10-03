@@ -1,12 +1,12 @@
-terraform {
-  backend "s3" {
-    bucket         = "circles-api-terraform"
-    region         = "eu-central-1"
-    key            = "circles-api-terraform.tfstate"
-    dynamodb_table = "circles-api-terraform"
-    encrypt        = true
-  }
-}
+# terraform {
+#   backend "s3" {
+#     bucket         = "circles-api-terraform"
+#     region         = "eu-central-1"
+#     key            = "circles-api-terraform.tfstate"
+#     dynamodb_table = "circles-api-terraform"
+#     encrypt        = true
+#   }
+# }
 
 provider "aws" {
   access_key = "${var.access_key}"
@@ -14,13 +14,11 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
-
-
 /*====
 Variables used across all modules
 ======*/
 locals {
-  production_availability_zones = ["eu-central-1a", "eu-central-1b"]
+  production_availability_zones = ["${var.aws_region}a", "${var.aws_region}b"]
 }
 
 # provider "aws" {
@@ -28,18 +26,19 @@ locals {
 #   #profile = "duduribeiro"
 # }
 
-resource "aws_key_pair" "key" {
-  key_name   = "production_key"
-  public_key = "${file("production_key.pub")}"
-}
+# resource "aws_key_pair" "key" {
+#   key_name   = "production_key"
+#   public_key = "${file("production_key.pub")}"
+# }
 
 module "networking" {
   source               = "./modules/networking"
   environment          = "production"
+  vpc_id               = "${var.circles_backend_vpc_id}"
   vpc_cidr             = "10.0.0.0/16"
   public_subnets_cidr  = ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnets_cidr = ["10.0.10.0/24", "10.0.20.0/24"]
-  region               = "${var.region}"
+  region               = "${var.aws_region}"
   availability_zones   = "${local.production_availability_zones}"
   key_name             = "production_key"
 }

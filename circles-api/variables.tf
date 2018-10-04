@@ -50,3 +50,7 @@ variable "private_subnets_cidr" {
 variable "cognito_pool_id" {
   description = "Cognito pool for circles users."
 }
+
+variable "circles_api_github_oauth_token" {
+  description = "OAuth Token for the circles-api github repo. https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/"
+}

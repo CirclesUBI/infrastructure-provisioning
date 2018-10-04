@@ -51,6 +51,7 @@ data "template_file" "buildspec" {
 
   vars {
     repository_url     = "${var.repository_url}"
+    image_name         = "${var.project_prefix}"
     region             = "${var.region}"
     cluster_name       = "${var.ecs_cluster_name}"
     subnet_id          = "${var.run_task_subnet_id}"
@@ -63,6 +64,7 @@ resource "aws_codebuild_project" "circles_api" {
   name          = "${var.project_prefix}-codebuild"
   build_timeout = "10"
   service_role  = "${aws_iam_role.codebuild_role.arn}"
+  # badge_enabled  = true // InvalidInputException: Build badges are not supported for CodePipeline source
 
   artifacts {
     type = "CODEPIPELINE"

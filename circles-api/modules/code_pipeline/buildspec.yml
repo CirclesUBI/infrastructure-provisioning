@@ -14,17 +14,15 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t $REPOSITORY_URI:latest .
-      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+      - docker build -t ${image_name}:latest .
+      - docker tag ${image_name}:latest ${image_name}:$IMAGE_TAG
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker images...
-      - docker push $REPOSITORY_URI:latest
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - docker push ${image_name}:latest
+      - docker push ${image_name}:$IMAGE_TAG
       - echo Writing image definitions file...
-      - printf '[{"name":"web","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-      # - echo upgrading db-migrate task definitions
-      # - aws ecs run-task --launch-type FARGATE --cluster ${cluster_name} --task-definition production_db_migrate --network-configuration "awsvpcConfiguration={subnets=[${subnet_id}],securityGroups=[${security_group_ids}]}"
+      - printf '[{"name":"${image_name}","imageUri":"%s"}]' ${image_name}:$IMAGE_TAG > imagedefinitions.json      
 artifacts:
   files: imagedefinitions.json

@@ -2,6 +2,10 @@ variable "repository_url" {
   description = "The url of the ECR repository"
 }
 
+variable "image_name" {
+  description = "The name of the docker image ECR"
+}
+
 variable "project_prefix" {
   description = "Name prefix for resources."
 }

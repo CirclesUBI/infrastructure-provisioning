@@ -28,7 +28,7 @@ resource "aws_ecs_cluster" "circles_api" {
 ECS task definitions
 ======*/
 
-/* the task definition for the web service */
+/* the task definition for the api service */
 data "template_file" "api_task" {
   template = "${file("${path.module}/tasks/api_task_definition.json")}"
 

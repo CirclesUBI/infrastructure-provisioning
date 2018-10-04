@@ -62,7 +62,7 @@ module "ecs" {
   vpc_id              = "${var.circles_backend_vpc_id}"
   availability_zones  = "${local.dev_availability_zones}"
   # repository_name     = "${var.project_prefix}/${var.environment}"
-  repository_name     = "${var.project_prefix}-ecr"
+  repository_name     = "${var.project_prefix}-ecr"  
   subnets_ids         = ["${module.networking.private_subnets_id}"]
   public_subnet_ids   = ["${module.networking.public_subnets_id}"]
   region              = "${var.aws_region}"

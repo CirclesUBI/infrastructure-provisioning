@@ -14,7 +14,7 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build --build-arg build_without="development test" --build-arg rails_env="production" -t $REPOSITORY_URI:latest .
+      - docker build -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
@@ -24,7 +24,7 @@ phases:
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing image definitions file...
       - printf '[{"name":"web","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-      - echo upgrading db-migrate task definitions
-      - aws ecs run-task --launch-type FARGATE --cluster ${cluster_name} --task-definition production_db_migrate --network-configuration "awsvpcConfiguration={subnets=[${subnet_id}],securityGroups=[${security_group_ids}]}"
+      # - echo upgrading db-migrate task definitions
+      # - aws ecs run-task --launch-type FARGATE --cluster ${cluster_name} --task-definition production_db_migrate --network-configuration "awsvpcConfiguration={subnets=[${subnet_id}],securityGroups=[${security_group_ids}]}"
 artifacts:
   files: imagedefinitions.json

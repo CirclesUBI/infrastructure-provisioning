@@ -1,6 +1,6 @@
 [
   {
-    "name": "circles_api",
+    "name": "circles-api-ecr",
     "image": "${image}",
     "portMappings": [
       {

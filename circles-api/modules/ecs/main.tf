@@ -103,7 +103,7 @@ resource "aws_ecs_service" "circles_api" {
 
   load_balancer {
     target_group_arn = "${aws_alb_target_group.circles_api.arn}"
-    container_name   = "circles_api"
+    container_name   = "circles-api-ecr"
     container_port   = "8080"
   }
 

@@ -2,10 +2,9 @@ version: 0.2
 
 phases:
   pre_build:
-    commands:
-      - pip install awscli --upgrade --user
-      - echo `aws --version`
+    commands:       
       - echo Logging in to Amazon ECR...
+      - aws --version
       - $(aws ecr get-login --region ${region} --no-include-email)
       - REPOSITORY_URI=${repository_url}
       - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
@@ -14,15 +13,17 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t ${image_name}:latest .
-      - docker tag ${image_name}:latest ${image_name}:$IMAGE_TAG
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker images...
-      - docker push ${image_name}:latest
-      - docker push ${image_name}:$IMAGE_TAG
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo $REPOSITORY_URI
+      - echo $IMAGE_TAG
       - echo Writing image definitions file...
-      - printf '[{"name":"${image_name}","imageUri":"%s"}]' ${image_name}:$IMAGE_TAG > imagedefinitions.json      
+      - printf '[{"name":"circles-api-ecr","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json      
 artifacts:
   files: imagedefinitions.json

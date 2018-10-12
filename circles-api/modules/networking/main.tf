@@ -3,13 +3,13 @@
 data "aws_availability_zones" "available" {}
 
 /* Elastic IP for NAT */
-resource "aws_eip" "circles_api" {
+resource "aws_eip" "network_eip" {
   vpc        = true
 }
 
 /* NAT */
-resource "aws_nat_gateway" "circles_api" {
-  allocation_id = "${aws_eip.circles_api.id}"
+resource "aws_nat_gateway" "network_nat_gateway" {
+  allocation_id = "${aws_eip.network_eip.id}"
   subnet_id     = "${element(aws_subnet.public_subnet.*.id, 0)}"
 
   tags {
@@ -75,7 +75,7 @@ resource "aws_route" "public_internet_gateway" {
 resource "aws_route" "private_nat_gateway" {
   route_table_id         = "${aws_route_table.private.id}"
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = "${aws_nat_gateway.circles_api.id}"
+  nat_gateway_id         = "${aws_nat_gateway.network_nat_gateway.id}"
 }
 
 /* Route table associations */
@@ -95,7 +95,7 @@ resource "aws_route_table_association" "private" {
 VPC's Default Security Group
 ======*/
 resource "aws_security_group" "default" {
-  name        = "${var.environment}-default-sg"
+  name        = "${var.project_prefix}-default-sg"
   description = "Default security group to allow inbound/outbound from the VPC"
   vpc_id      = "${var.vpc_id}"
 
@@ -118,12 +118,12 @@ resource "aws_security_group" "default" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "circles_api" {
-  name              = "${var.project_prefix}-circles-api"
+resource "aws_cloudwatch_log_group" "network_log_group" {
+  name              = "${var.project_prefix}-network-logs"
   retention_in_days = "60"
 
   tags {
-    Name        = "${var.project_prefix}-circles-api"
+    Name        = "${var.project_prefix}-network-logs"
     Environment = "${var.environment}"
   }
 }

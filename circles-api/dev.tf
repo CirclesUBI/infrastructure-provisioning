@@ -43,17 +43,19 @@ module "networking" {
   availability_zones   = "${local.dev_availability_zones}"
 }
 
-# module "rds" {
-#   source            = "./modules/rds"
-#   environment       = "dev"
-#   allocated_storage = "20"
-#   database_name     = "${var.dev_database_name}"
-#   database_username = "${var.dev_database_username}"
-#   database_password = "${var.dev_database_password}"
-#   subnet_ids        = ["${module.networking.private_subnets_id}"]
-#   vpc_id            = "${module.networking.vpc_id}"
-#   instance_class    = "db.t2.micro"
-# }
+module "rds" {
+  source                  = "./modules/rds"
+  environment             = "dev"
+  allocated_storage       = "20"
+  database_name           = "${var.database_name}"
+  database_user           = "${var.database_user}"
+  database_password       = "${var.database_password}"
+  ecs_security_group      = "${module.ecs.security_group_id}"
+  vpc_id                  = "${var.circles_backend_vpc_id}"
+  instance_class          = "db.t2.micro"
+  rds_instance_identifier = "${var.rds_instance_identifier}"
+  availability_zones      = "${local.dev_availability_zones}"
+}
 
 module "ecs" {
   source              = "./modules/ecs"

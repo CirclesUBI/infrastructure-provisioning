@@ -1,0 +1,11 @@
+the terraform state goes in s3
+there's a table to dynamo to lock the state
+
+should we use modules?
+
+what is the nat? how do the nat and the internet gateway interact?
+all the circles resources are on the same private subnet
+
+when we can, add name and env tags
+
+are we allowing traffic on all ports?

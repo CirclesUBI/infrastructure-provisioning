@@ -4,7 +4,7 @@
     "cpu": 256,
     "essential": true,
     "image": "rocketchat/rocket.chat:latest",
-    "memory": 512,
+    "memory": 1024,
     "portMappings": [
       {
         "containerPort": 3000,

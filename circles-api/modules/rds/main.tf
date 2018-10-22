@@ -12,7 +12,7 @@ resource "aws_subnet" "rds" {
 
 resource "aws_db_subnet_group" "default" {
   name = "${var.rds_instance_identifier}-subnet-group"
-  description = "Terraform example RDS subnet group"
+  description = "RDS subnet group"
   subnet_ids = ["${aws_subnet.rds.*.id}"]
 }
 
@@ -44,7 +44,7 @@ resource "aws_db_instance" "default" {
   identifier = "${var.rds_instance_identifier}"
   allocated_storage = "${var.allocated_storage}"
   engine = "postgres"
-  engine_version = "9.6.3"
+  engine_version = "10.5"
   instance_class = "${var.instance_class}"
   name = "${var.database_name}"
   username = "${var.database_user}"
@@ -58,7 +58,7 @@ resource "aws_db_instance" "default" {
 resource "aws_db_parameter_group" "default" {
   name = "${var.rds_instance_identifier}-param-group"
   description = "Parameter group for postgres9.6"
-  family = "postgres9.6"
+  family = "postgres10.5"
   parameter {
     name = "character_set_server"
     value = "utf8"

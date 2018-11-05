@@ -1,0 +1,309 @@
+terraform {
+  backend "s3" {
+    bucket         = "circles-blog-terraform"
+    region         = "eu-central-1"
+    key            = "circles-blog-terraform.tfstate"
+    dynamodb_table = "circles-blog-terraform"
+    encrypt        = true
+  }
+}
+
+# AWS
+provider "aws" {
+  access_key = "${var.access_key}"
+  secret_key = "${var.secret_key}"
+  region     = "${var.aws_region}"
+}
+
+locals {
+  availability_zones = ["${var.aws_region}a", "${var.aws_region}b"]
+}
+
+module "networking" {
+  source               = "./modules/networking"
+  project_prefix       = "${var.project_prefix}"
+  environment          = "${var.environment}"
+  vpc_id               = "${var.circles_backend_vpc_id}"
+  igw_id               = "${var.circles_backend_igw_id}"
+  public_subnets_cidr  = ["10.0.5.0/24", "10.0.6.0/24"]
+  private_subnets_cidr = ["10.0.50.0/24", "10.0.60.0/24"]
+  region               = "${var.aws_region}"
+  availability_zones   = "${local.availability_zones}"
+}
+
+# module "alb" {
+#   source              = "terraform-aws-modules/alb/aws"
+#   version             = "3.4.0"
+#   load_balancer_name  = "${var.project_prefix}-alb"
+#   security_groups     = ["${aws_security_group.circles_blog_alb_sg.id}"]
+#   subnets             = ["${module.networking.private_subnets_id}"]
+#   vpc_id               = "${var.circles_backend_vpc_id}"
+# }
+
+module "alb" {
+  source                        = "terraform-aws-modules/alb/aws"
+  load_balancer_name            = "${var.project_prefix}-alb"
+  security_groups               = ["${aws_security_group.circles_blog_alb_sg.id}"]
+  logging_enabled               = false
+  # log_location_prefix           = "loc-pref"  
+  subnets                       = ["${module.networking.private_subnets_id}"]
+  tags                          = "${map("Environment", "dev")}"
+  vpc_id                        = "${var.circles_backend_vpc_id}"
+  # https_listeners               = "${list(map("certificate_arn", "arn:aws:iam::123456789012:server-certificate/test_cert-123456789012", "port", 443))}"
+  # https_listeners_count         = "1"
+  # http_tcp_listeners            = "${list(map("port", "80", "protocol", "HTTP"))}"
+  # http_tcp_listeners_count      = "1"
+  # target_groups                 = "${list(map("name", "foo", "backend_protocol", "HTTP", "backend_port", "80"))}"
+  # target_groups_count           = "1"
+}
+
+
+# module "autoscaling" {
+#   source  = "terraform-aws-modules/autoscaling/aws"
+#   version = "2.8.0"
+#   name                  = "${var.project_prefix}-asg"
+#   launch_configuration  = "${aws_launch_configuration.circles_blog.name}"
+#   # availability_zones    = "${local.availability_zones}"
+#   desired_capacity      = 2
+#   min_size              = 2
+#   max_size              = 4
+#   # enabled_metrics       = ["GroupMinSize", "GroupMaxSize", "GroupDesiredCapacity", "GroupInServiceInstances", "GroupTotalInstances"]
+#   # metrics_granularity   = "1Minute"
+#   # load_balancers        = ["${aws_alb.circles_blog.id}"]
+#   target_group_arns     = "${module.alb.target_group_arns}"
+#   health_check_type     = "ELB"
+#   vpc_zone_identifier   = ["${module.networking.private_subnets_id}"]
+# }
+
+
+# resource "aws_s3_bucket" "log_bucket" {
+#   bucket        = "${local.log_bucket_name}"
+#   policy        = "${data.aws_iam_policy_document.bucket_policy.json}"
+#   force_destroy = true
+#   tags          = "${local.tags}"
+
+#   lifecycle_rule {
+#     id      = "log-expiration"
+#     enabled = "true"
+
+#     expiration {
+#       days = "7"
+#     }
+#   }
+# }
+
+
+module "asg" {
+  source = "terraform-aws-modules/autoscaling/aws"
+
+  name = "${var.project_prefix}-asg-service"
+
+  # Launch configuration
+  launch_configuration  = "${aws_launch_configuration.circles_blog.name}"
+  create_lc = false
+  recreate_asg_when_lc_changes = true
+  iam_instance_profile = "${aws_iam_instance_profile.circles_blog.id}"
+
+  # lc_name = "${var.project_prefix}-"
+
+  # image_id        = "ami-7c4f7097"
+  # instance_type   = "t2.micro"
+  # security_groups = ["${aws_security_group.circles_blog_sg.id}"]
+  # user_data       = "${data.template_file.blog_cloud_config.rendered}"
+
+  # Auto scaling group
+  asg_name                  = "${var.project_prefix}-asg"
+  vpc_zone_identifier       = ["${module.networking.private_subnets_id}"]
+  health_check_type         = "EC2"
+  min_size                  = 1
+  max_size                  = 4
+  desired_capacity          = 2
+  wait_for_capacity_timeout = 0
+
+  tags = [
+    {
+      key = "Name"
+      value = "${var.project_prefix}-asg"
+      propagate_at_launch = true
+    },
+    {
+      key = "Environment"
+      value = "dev"
+      propagate_at_launch = true
+    }
+  ]
+}
+
+resource "aws_launch_configuration" "circles_blog" {
+  name_prefix     = "${var.project_prefix}-"
+  image_id        = "ami-7c4f7097"
+  instance_type   = "t2.micro"
+  security_groups = ["${aws_security_group.circles_blog_sg.id}"]
+  # security_groups = ["${module.networking.security_groups_ids}"]
+  key_name        = "${aws_key_pair.circles_blog.key_name}"
+  user_data       = "${data.template_file.blog_cloud_config.rendered}"
+  associate_public_ip_address = true
+
+  lifecycle {
+    create_before_destroy = true
+  } 
+}
+
+
+data "template_file" "cloudwatch_config_blog" {
+  template = "${file("cloudwatch.json")}"
+
+  vars {
+    log_group_name  = "${var.project_prefix}-logs"
+    log_stream_name = "circles-blog"
+  }
+}
+
+data "template_file" "blog_cloud_config" {
+  template = "${file("blog_cloud-config.yml")}"
+
+  vars {
+    cloudwatch_json = "${data.template_file.cloudwatch_config_blog.rendered}"
+    smtp_host       = "${var.smtp_host}"
+    smtp_username   = "${var.smtp_username}"
+    smtp_password   = "${var.smtp_password}"
+  }
+}
+
+
+resource "aws_key_pair" "circles_blog" {
+  key_name   = "blog-key"
+  public_key = "${file("ssh/insecure-deployer.pub")}"
+}
+
+
+resource "aws_security_group" "circles_blog_sg" {
+  name    = "${var.project_prefix}-sg"
+  vpc_id  = "${var.circles_backend_vpc_id}"
+  
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+
+    cidr_blocks = [
+      "0.0.0.0/0",
+    ]
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "ssh" {
+  security_group_id = "${aws_security_group.circles_blog_sg.id}"
+  type = "ingress"
+  from_port = 22
+  to_port = 22
+  protocol = "tcp"
+  cidr_blocks = ["0.0.0.0/32"]
+}
+
+resource "aws_security_group" "circles_blog_alb_sg" {
+  name = "${var.project_prefix}-alb-sg"
+  description = "controls access to the application ALB"
+  vpc_id  = "${var.circles_backend_vpc_id}"  
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+
+    cidr_blocks = [
+      "0.0.0.0/0",
+    ]
+  }
+
+  tags {
+    Name        = "${var.project_prefix}-lb-sg"
+    Environment = "${var.environment}"
+  }
+}
+
+
+resource "aws_cloudwatch_log_group" "blog" {
+  name              = "${var.project_prefix}-logs"
+  retention_in_days = "60"
+
+  tags {
+    Name        = "${var.project_prefix}-logs"
+    Environment = "dev"
+  }
+}
+
+## IAM
+
+resource "aws_iam_instance_profile" "circles_blog" {
+  name = "${var.project_prefix}-instance-profile"
+  role = "${aws_iam_role.instance.name}"
+}
+
+resource "aws_iam_role" "instance" {
+  name = "${var.project_prefix}-instance-role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+data "template_file" "instance_profile" {
+  template = "${file("${path.module}/instance-profile-policy.json")}"
+
+  vars {
+    app_log_group_arn = "${aws_cloudwatch_log_group.blog.arn}"
+    net_log_group_arn = "${module.networking.log_group_arn}"
+    region            = "${var.aws_region}"
+  }
+}
+
+resource "aws_iam_role_policy" "instance" {
+  name   = "${var.project_prefix}-instance-policy"
+  role   = "${aws_iam_role.instance.name}"
+  policy = "${data.template_file.instance_profile.rendered}"
+}

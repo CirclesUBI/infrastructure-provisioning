@@ -32,9 +32,9 @@ module "networking" {
   project_prefix       = "${var.project_prefix}"
   environment          = "${var.environment}"
   vpc_id               = "${var.circles_backend_vpc_id}"
-  igw_id               = "${var.circles_backend_igw_id}"
-  public_subnets_cidr  = ["10.0.5.0/24", "10.0.6.0/24"]
-  private_subnets_cidr = ["10.0.50.0/24", "10.0.60.0/24"]
+  igw_id               = "${var.circles_backend_igw_id}" 
+  public_subnets_cidr  = "${var.blog_public_cidrs}"
+  private_subnets_cidr = "${var.blog_private_cidrs}"
   region               = "${var.aws_region}"
   availability_zones   = "${local.availability_zones}"
 }
@@ -44,11 +44,7 @@ resource "aws_launch_configuration" "circles_blog" {
   image_id        = "ami-7c4f7097"
   instance_type   = "t2.micro"
   security_groups = ["${aws_security_group.circles_blog_sg.id}"]
-  
-  
-  # security_groups = ["${module.networking.security_groups_ids}"]
   key_name        = "${aws_key_pair.circles_blog.key_name}"
-  # user_data       = "${data.template_file.blog_cloud_config.rendered}"
   iam_instance_profile          = "${aws_iam_instance_profile.circles_blog.id}"
   associate_public_ip_address = true
 
@@ -130,27 +126,6 @@ module "elb" {
     Environment = "${var.environment}"
   }
 }
-
-# data "template_file" "cloudwatch_config_blog" {
-#   template = "${file("cloudwatch.json")}"
-
-#   vars {
-#     log_group_name  = "${var.project_prefix}-logs"
-#     log_stream_name = "circles-blog"
-#   }
-# }
-
-# data "template_file" "blog_cloud_config" {
-#   template = "${file("blog_cloud-config.yml")}"
-
-#   vars {
-#     cloudwatch_json = "${data.template_file.cloudwatch_config_blog.rendered}"
-#     smtp_host       = "${var.smtp_host}"
-#     smtp_username   = "${var.smtp_username}"
-#     smtp_password   = "${var.smtp_password}"
-#   }
-# }
-
 
 resource "aws_key_pair" "circles_blog" {
   key_name   = "blog-key"

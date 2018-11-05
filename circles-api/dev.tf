@@ -21,6 +21,14 @@ locals {
   dev_availability_zones = ["${var.aws_region}a", "${var.aws_region}b"]
 }
 
+variable "api_public_cidrs" {
+  default = ["10.0.2.0/26", "10.0.2.64/26"]
+}
+
+variable "api_private_cidrs" {
+  default = ["10.0.2.128/26", "10.0.2.192/26"]
+}
+
 # provider "aws" {
 #   region  = "${var.region}"
 #   #profile = "duduribeiro"

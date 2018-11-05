@@ -19,6 +19,14 @@ locals {
   availability_zones = ["${var.aws_region}a", "${var.aws_region}b"]
 }
 
+variable "blog_public_cidrs" {
+  default = ["10.0.1.0/26", "10.0.1.64/26"]
+}
+
+variable "blog_private_cidrs" {
+  default = ["10.0.1.128/26", "10.0.1.192/26"]
+}
+
 module "networking" {
   source               = "./modules/networking"
   project_prefix       = "${var.project_prefix}"
@@ -40,7 +48,7 @@ resource "aws_launch_configuration" "circles_blog" {
   
   # security_groups = ["${module.networking.security_groups_ids}"]
   key_name        = "${aws_key_pair.circles_blog.key_name}"
-  user_data       = "${data.template_file.blog_cloud_config.rendered}"
+  # user_data       = "${data.template_file.blog_cloud_config.rendered}"
   iam_instance_profile          = "${aws_iam_instance_profile.circles_blog.id}"
   associate_public_ip_address = true
 
@@ -123,25 +131,25 @@ module "elb" {
   }
 }
 
-data "template_file" "cloudwatch_config_blog" {
-  template = "${file("cloudwatch.json")}"
+# data "template_file" "cloudwatch_config_blog" {
+#   template = "${file("cloudwatch.json")}"
 
-  vars {
-    log_group_name  = "${var.project_prefix}-logs"
-    log_stream_name = "circles-blog"
-  }
-}
+#   vars {
+#     log_group_name  = "${var.project_prefix}-logs"
+#     log_stream_name = "circles-blog"
+#   }
+# }
 
-data "template_file" "blog_cloud_config" {
-  template = "${file("blog_cloud-config.yml")}"
+# data "template_file" "blog_cloud_config" {
+#   template = "${file("blog_cloud-config.yml")}"
 
-  vars {
-    cloudwatch_json = "${data.template_file.cloudwatch_config_blog.rendered}"
-    smtp_host       = "${var.smtp_host}"
-    smtp_username   = "${var.smtp_username}"
-    smtp_password   = "${var.smtp_password}"
-  }
-}
+#   vars {
+#     cloudwatch_json = "${data.template_file.cloudwatch_config_blog.rendered}"
+#     smtp_host       = "${var.smtp_host}"
+#     smtp_username   = "${var.smtp_username}"
+#     smtp_password   = "${var.smtp_password}"
+#   }
+# }
 
 
 resource "aws_key_pair" "circles_blog" {

@@ -1,5 +1,4 @@
 
-
 data "aws_availability_zones" "available" {}
 
 /* Elastic IP for NAT */

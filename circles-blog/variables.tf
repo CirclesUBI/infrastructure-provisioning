@@ -45,3 +45,7 @@ variable "circles_backend_vpc_id" {
 variable "circles_backend_igw_id" {
   description = "The Circles backend Internet Gatway shared by public subnets."  
 }
+
+variable "blog_s3_backup_bucket" {
+  description = "s3 bucket name to backup to."  
+}

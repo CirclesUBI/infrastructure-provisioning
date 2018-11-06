@@ -1,3 +1,7 @@
-# output "alb-dns" {
-#   value = "${aws_alb.circles_blog.dns_name}"
-# }
+output "alb-dns" {
+  value = "${module.elb.this_elb_dns_name}"
+}
+
+output "image" {
+  value = "${aws_launch_configuration.circles_blog.image_id}"
+}

@@ -15,6 +15,21 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
+data "aws_ami" "amazon-linux-2" {
+ most_recent = true
+
+ filter {
+   name   = "owner-alias"
+   values = ["amazon"]
+ }
+
+ filter {
+   name   = "name"
+   values = ["amzn2-ami-hvm*"]
+ }
+}
+
+
 locals {
   availability_zones = ["${var.aws_region}a", "${var.aws_region}b"]
 }
@@ -41,7 +56,7 @@ module "networking" {
 
 resource "aws_launch_configuration" "circles_blog" {
   name_prefix     = "${var.project_prefix}-"
-  image_id        = "ami-7c4f7097"
+  image_id        = "${data.aws_ami.amazon-linux-2.id}" #"ami-7c4f7097"
   instance_type   = "t2.micro"
   security_groups = ["${aws_security_group.circles_blog_sg.id}"]
   key_name        = "${aws_key_pair.circles_blog.key_name}"
@@ -128,10 +143,10 @@ module "elb" {
   }
 }
 
+
 data "template_file" "blog_cloud_config" {
   template = "${file("blog_cloud-config.yml")}"
   vars {
-    cloudwatch_json = "${data.template_file.cloudwatch_config_blog.rendered}"
     smtp_host       = "${var.smtp_host}"
     smtp_username   = "${var.smtp_username}"
     smtp_password   = "${var.smtp_password}"
@@ -267,6 +282,7 @@ data "template_file" "instance_profile" {
     app_log_group_arn = "${aws_cloudwatch_log_group.blog.arn}"
     net_log_group_arn = "${module.networking.log_group_arn}"
     region            = "${var.aws_region}"
+    s3_bucket         = "${var.blog_s3_backup_bucket}"
   }
 }
 

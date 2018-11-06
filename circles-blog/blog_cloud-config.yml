@@ -16,8 +16,8 @@ runcmd:
   # Create blog data volume which will store the backups from ghost-backups
   - docker volume create ghost_data
   # Run ghost
-  - docker run -d --name circles_blog --log-driver=awslogs --log-opt awslogs-region=eu-central-1 --log-opt awslogs-group=circles-blog-logs awslogs-stream=circles-blog -v ghost_data:/var/lib/ghost/content -p 80:2368 -e NODE_ENV=production -e url=http://blog.joincircles.net -e mail__transport=SMTP -e mail__options__service=SES -e mail__options__host=${smtp_host} -e mail__options__port=465 -e mail__options__auth__user=${smtp_username} -e mail__options__auth__pass=${smtp_password} ghost:alpine
+  - docker run -d --name circles_blog --log-driver=awslogs --log-opt awslogs-region=eu-central-1 --log-opt awslogs-group=circles-blog-logs --log-opt awslogs-stream=circles-blog -v ghost_data:/var/lib/ghost/content -p 80:2368 -e NODE_ENV=production -e url=http://blog.joincircles.net -e mail__transport=SMTP -e mail__options__service=SES -e mail__options__host=${smtp_host} -e mail__options__port=465 -e mail__options__auth__user=${smtp_username} -e mail__options__auth__pass=${smtp_password} ghost:alpine
   # Run ghost-backup-s3
-  - docker run -d --name ghost_backup -v ghost_data:/data -e BACKUP_ONLY=false edzillion/ghost-backup-s3:latest s3://circles-blog-backup/ghost-backup-s3
+  - docker run -d --name ghost_backup --log-driver=awslogs --log-opt awslogs-region=eu-central-1 --log-opt awslogs-group=circles-blog-logs --log-opt awslogs-stream=ghost-backup -v ghost_data:/data -e BACKUP_ONLY=false -e BACKUP_INTERVAL=8h edzillion/ghost-backup-s3:latest s3://circles-blog-backup/ghost-backup-s3
   # And restart ghost to rerun init scripts
   - docker restart circles_blog

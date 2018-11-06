@@ -76,7 +76,7 @@ module "asg" {
   source = "terraform-aws-modules/autoscaling/aws"
 
   name = "${var.project_prefix}-asg-service"
-  load_balancers = ["${module.elb.this_elb_id}"]
+  load_balancers = ["${module.alb.load_balancer_id}"]
 
   # Launch configuration
   launch_configuration          = "${aws_launch_configuration.circles_blog.name}"
@@ -160,46 +160,75 @@ resource "aws_autoscaling_policy" "scale_in_scaling_app" {
     autoscaling_group_name = "${module.asg.this_autoscaling_group_name}"
 }
 
-######
-# ELB
-######
-module "elb" {
-  source = "terraform-aws-modules/elb/aws"
 
-  name = "${var.project_prefix}-elb"
+######
+# ALB
+######
+module "alb" {
+  source                        = "terraform-aws-modules/alb/aws"
+
+  vpc_id                        = "${var.vpc_id}"
+  load_balancer_name            = "${var.project_prefix}-alb"
 
   subnets         = ["${module.networking.public_subnets_id}"]
   security_groups = ["${aws_security_group.circles_blog_alb_sg.id}"]
-  internal        = false
+  
+  enable_cross_zone_load_balancing = true
+  logging_enabled = false
 
-  listener = [
-    {
-      instance_port     = "80"
-      instance_protocol = "HTTP"
-      lb_port           = "80"
-      lb_protocol       = "HTTP"
-    },
-  ]
+  https_listeners               = "${list(map("certificate_arn", "arn:aws:iam::123456789012:server-certificate/test_cert-123456789012", "port", 443))}"
+  https_listeners_count         = "1"
+  http_tcp_listeners            = "${list(map("port", "80", "protocol", "HTTP"))}"
+  http_tcp_listeners_count      = "1"
+  # target_groups                 = "${list(map("name", "foo", "backend_protocol", "HTTP", "backend_port", "80"))}"
+  # target_groups_count           = "1"
 
-  health_check = [
-    {
-      target              = "HTTP:80/"
-      interval            = 30
-      healthy_threshold   = 2
-      unhealthy_threshold = 2
-      timeout             = 5
-    },
-  ]
-
-  tags = {
-    Name        = "${var.project_prefix}-logs"
-    Environment = "${var.environment}"
-  }
+  tags                          = "${map("Environment", "${var.environment}", "Named", "${var.project_prefix}-alb")}"
 }
+
+
+
+
+######
+# ELB
+######
+# module "elb" {
+#   source = "terraform-aws-modules/elb/aws"
+
+#   name = "${var.project_prefix}-elb"
+
+#   subnets         = ["${module.networking.public_subnets_id}"]
+#   security_groups = ["${aws_security_group.circles_blog_alb_sg.id}"]
+#   internal        = false
+
+#   listener = [
+#     {
+#       instance_port     = "80"
+#       instance_protocol = "HTTP"
+#       lb_port           = "80"
+#       lb_protocol       = "HTTP"
+#     },
+#   ]
+
+#   health_check = [
+#     {
+#       target              = "HTTP:80/"
+#       interval            = 30
+#       healthy_threshold   = 2
+#       unhealthy_threshold = 2
+#       timeout             = 5
+#     },
+#   ]
+
+#   tags = {
+#     Name        = "${var.project_prefix}-logs"
+#     Environment = "${var.environment}"
+#   }
+# }
 
 resource "aws_lb_cookie_stickiness_policy" "blog" {
   name                     = "${var.project_prefix}-cookie-policy"
-  load_balancer            = "${module.elb.this_elb_id}"
+  load_balancer            = "${module.alb.load_balancer_id}"
   lb_port                  = 80
   cookie_expiration_period = 600
 }

@@ -10,9 +10,7 @@ users:
 runcmd:  
   # Install docker
   - yum install -y docker
-  - systemctl start docker
-  # Run letsencrypt and save certs to /var/ssl - send to dev/null so no certs go in logs
-  # - docker run --log-driver=awslogs --log-opt awslogs-region=eu-central-1 --log-opt awslogs-group=circles-blog-logs --log-opt awslogs-stream=letsencrpt-$(date "+%F-%H-%M-%S") -v /var/ssl:/var/ssl -p 80:80 -e STAGING=0 -e DOMAINS=blog.joincircles.net --rm asamoshkin/letsencrypt-certgen issue > /dev/null
+  - systemctl start docker  
   # Create blog data volume which will store the backups from ghost-backups
   - docker volume create ghost_data
   # Run ghost

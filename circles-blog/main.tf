@@ -45,6 +45,7 @@ resource "aws_launch_configuration" "circles_blog" {
   instance_type   = "t2.micro"
   security_groups = ["${aws_security_group.circles_blog_sg.id}"]
   key_name        = "${aws_key_pair.circles_blog.key_name}"
+  user_data       = "${data.template_file.blog_cloud_config.rendered}"
   iam_instance_profile          = "${aws_iam_instance_profile.circles_blog.id}"
   associate_public_ip_address = true
 
@@ -126,6 +127,17 @@ module "elb" {
     Environment = "${var.environment}"
   }
 }
+
+data "template_file" "blog_cloud_config" {
+  template = "${file("blog_cloud-config.yml")}"
+  vars {
+    cloudwatch_json = "${data.template_file.cloudwatch_config_blog.rendered}"
+    smtp_host       = "${var.smtp_host}"
+    smtp_username   = "${var.smtp_username}"
+    smtp_password   = "${var.smtp_password}"
+  }
+}
+
 
 resource "aws_key_pair" "circles_blog" {
   key_name   = "blog-key"

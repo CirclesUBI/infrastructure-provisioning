@@ -106,6 +106,60 @@ module "asg" {
   ]
 }
 
+resource "aws_cloudwatch_metric_alarm" "scaling_app_high" {
+
+  alarm_name = "${var.project_prefix}-cpu-over-load"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods = "1"
+  metric_name = "CPUUtilization"
+  namespace = "AWS/EC2"
+  period = "60"
+  statistic = "Average"
+  threshold = "75"
+
+  dimensions {
+    AutoScalingGroupName = "${module.asg.this_autoscaling_group_name}"
+  }
+
+  alarm_actions = ["${aws_autoscaling_policy.scale_out_scaling_app.arn}"]
+}
+
+resource "aws_cloudwatch_metric_alarm" "scaling_app_low" {
+
+  alarm_name = "${var.project_prefix}-cpu-under-load"
+  comparison_operator = "LessThanThreshold" 
+  evaluation_periods = "1"
+  metric_name = "CPUUtilization"
+  namespace = "AWS/EC2"
+  period = "300"
+  statistic = "Average"
+  threshold = "60"
+
+  dimensions {
+    AutoScalingGroupName = "${module.asg.this_autoscaling_group_name}"
+  }
+
+  alarm_actions = ["${aws_autoscaling_policy.scale_in_scaling_app.arn}"]
+}
+
+resource "aws_autoscaling_policy" "scale_out_scaling_app" {
+
+    name = "${var.project_prefix}-cpu-scale-out"
+    scaling_adjustment = 1
+    adjustment_type = "ChangeInCapacity"
+    cooldown = 300
+    autoscaling_group_name = "${module.asg.this_autoscaling_group_name}"
+}
+
+resource "aws_autoscaling_policy" "scale_in_scaling_app" {
+
+    name = "${var.project_prefix}-cpu-scale-in"
+    scaling_adjustment = -1
+    adjustment_type = "ChangeInCapacity"
+    cooldown = 300
+    autoscaling_group_name = "${module.asg.this_autoscaling_group_name}"
+}
+
 ######
 # ELB
 ######

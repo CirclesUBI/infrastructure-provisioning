@@ -57,14 +57,24 @@ resource "aws_vpc" "default" {
   }
 }
 
+variable "rocketchat_public_cidrs" {
+  default = ["10.0.0.0/26", "10.0.0.64/26"]
+}
+
+variable "rocketchat_private_cidrs" {
+  default = ["10.0.0.128/26", "10.0.0.192/26"]
+}
+
 resource "aws_subnet" "public" {
   count             = "${var.az_count}"
   vpc_id            = "${aws_vpc.default.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.default.cidr_block, 8, count.index)}"
+  cidr_block        = "${element(var.rocketchat_public_cidrs, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
 
   tags {
     Name = "${var.project_prefix}-public-subnet-${count.index}"
+    Environment = "${var.environment}"
+    Project = "circles"
   }
 }
 
@@ -133,14 +143,14 @@ data "template_file" "cloud_config" {
   }
 }
 
-resource "aws_key_pair" "circles_rocketchat" {
-  key_name   = "circles-rocketchat"
-  public_key = "${file("ssh/circles-rocketchat.pub")}"
-}
+# resource "aws_key_pair" "circles_rocketchat" {
+#   key_name   = "circles-rocketchat"
+#   public_key = "${file("ssh/circles-rocketchat.pub")}"
+# }
 
 resource "aws_launch_configuration" "rocketchat" {
   security_groups             = ["${aws_security_group.instance_sg.id}"]
-  key_name                    = "${aws_key_pair.circles_rocketchat.key_name}"
+  # key_name                    = "${aws_key_pair.circles_rocketchat.key_name}"
   image_id                    = "${data.aws_ami.stable_coreos.id}"            //"ami-10e6c8fb"
   instance_type               = "t2.small"
   iam_instance_profile        = "${aws_iam_instance_profile.rocketchat.name}"

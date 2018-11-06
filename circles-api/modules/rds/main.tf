@@ -35,7 +35,7 @@ resource "aws_security_group" "rds" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags {
-    Name = "terraform-example-rds-security-group"
+    Name = "rds-security-group"
     Environment = "${var.environment}"
   }
 }
@@ -57,7 +57,7 @@ resource "aws_db_instance" "default" {
 
 resource "aws_db_parameter_group" "default" {
   name = "${var.rds_instance_identifier}-param-group"
-  description = "Parameter group for postgres9.6"
+  description = "Parameter group for postgres10.5"
   family = "postgres10.5"
   parameter {
     name = "character_set_server"

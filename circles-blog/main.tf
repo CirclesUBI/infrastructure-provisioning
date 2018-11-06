@@ -143,6 +143,13 @@ module "elb" {
   }
 }
 
+resource "aws_lb_cookie_stickiness_policy" "blog" {
+  name                     = "${var.project_prefix}-cookie-policy"
+  load_balancer            = "${module.elb.this_elb_id}"
+  lb_port                  = 80
+  cookie_expiration_period = 600
+}
+
 
 data "template_file" "blog_cloud_config" {
   template = "${file("blog_cloud-config.yml")}"

@@ -58,7 +58,6 @@ resource "aws_launch_configuration" "circles_blog" {
   image_id        = "${data.aws_ami.amazon-linux-2.id}" #"ami-7c4f7097"
   instance_type   = "t2.micro"
   security_groups = ["${aws_security_group.circles_blog_sg.id}"]
-  key_name        = "${aws_key_pair.circles_blog.key_name}"
   user_data       = "${data.template_file.blog_cloud_config.rendered}"
   iam_instance_profile          = "${aws_iam_instance_profile.circles_blog.id}"
   associate_public_ip_address = true
@@ -196,12 +195,6 @@ data "template_file" "blog_cloud_config" {
 }
 
 
-resource "aws_key_pair" "circles_blog" {
-  key_name   = "blog-key"
-  public_key = "${file("ssh/insecure-deployer.pub")}"
-}
-
-
 resource "aws_security_group" "circles_blog_sg" {
   name    = "${var.project_prefix}-sg"
   vpc_id  = "${var.circles_backend_vpc_id}"
@@ -210,20 +203,6 @@ resource "aws_security_group" "circles_blog_sg" {
     from_port = 80
     to_port = 80
     protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 22
-    to_port     = 22
     cidr_blocks = ["0.0.0.0/0"]
   }
 

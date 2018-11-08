@@ -1,4 +1,5 @@
 
+
 data "aws_availability_zones" "available" {}
 
 /* Elastic IP for NAT */
@@ -17,13 +18,13 @@ resource "aws_nat_gateway" "network_nat_gateway" {
   }
 }
 
+
 /* Public subnet */
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = "${var.vpc_id}"
   count                   = "${length(var.public_subnets_cidr)}"
   cidr_block              = "${element(var.public_subnets_cidr, count.index)}"
   availability_zone       = "${element(var.availability_zones, count.index)}"
-  map_public_ip_on_launch = true
 
   tags {
     Name        = "${var.project_prefix}-${element(var.availability_zones, count.index)}-public-subnet"
@@ -113,7 +114,12 @@ resource "aws_security_group" "default" {
   }
 
   tags {
+    Name        = "${var.project_prefix}-default-sg"
     Environment = "${var.environment}"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

@@ -1,7 +1,7 @@
 resource "aws_subnet" "rds" {
   count = "${length(var.availability_zones)}"
   vpc_id = "${var.vpc_id}"
-  cidr_block = "${var.cidr_block}"
+  cidr_block = "${element(var.cidr_block, count.index)}"
   map_public_ip_on_launch = true
   availability_zone = "${element(var.availability_zones, count.index)}"
   tags {
@@ -44,7 +44,7 @@ resource "aws_db_instance" "default" {
   identifier = "${var.rds_instance_identifier}"
   allocated_storage = "${var.allocated_storage}"
   engine = "postgres"
-  engine_version = "10.5"
+  engine_version = "9.6.3"
   instance_class = "${var.instance_class}"
   name = "${var.database_name}"
   username = "${var.database_user}"
@@ -53,18 +53,23 @@ resource "aws_db_instance" "default" {
   vpc_security_group_ids = ["${aws_security_group.rds.id}"]
   skip_final_snapshot = true
   final_snapshot_identifier = "Ignore"
+
+  tags {
+    Name = "circles-api-rds"
+    Environment = "${var.environment}"
+  }
 }
 
 resource "aws_db_parameter_group" "default" {
   name = "${var.rds_instance_identifier}-param-group"
-  description = "Parameter group for postgres10.5"
-  family = "postgres10.5"
-  parameter {
-    name = "character_set_server"
-    value = "utf8"
-  }
-  parameter {
-    name = "character_set_client"
-    value = "utf8"
-  }
+  description = "Parameter group for postgres9.6"
+  family = "postgres9.6"
+  # parameter {
+  #   name = "character_set_server"
+  #   value = "utf8"
+  # }
+  # parameter {
+  #   name = "character_set_client"
+  #   value = "utf8"
+  # }
 }

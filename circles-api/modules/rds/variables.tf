@@ -40,5 +40,6 @@ variable "availability_zones" {
 }
 
 variable "cidr_block" {
+  type        = "list"
   description = "The CIDR for the rds subnet"
 }

@@ -29,8 +29,13 @@ variable "api_private_cidrs" {
   default = ["10.0.2.128/26", "10.0.2.192/26"]
 }
 
+
+variable "rds_public_cidrs" {
+  default = ["10.0.3.0/26", "10.0.3.64/26"]
+}
+
 variable "rds_private_cidrs" {
-  default = ["10.0.3.0/26"] #, "10.0.2.192/26"]
+  default = ["10.0.3.128/26", "10.0.3.192/26"]
 }
 
 # resource "aws_key_pair" "key" {

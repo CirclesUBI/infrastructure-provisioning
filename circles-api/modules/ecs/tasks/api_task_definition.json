@@ -26,7 +26,27 @@
       {
         "name": "COGNITO_POOL_REGION",
         "value": "${region}"
-      }
+      },
+      {
+        "name": "PGUSER",
+        "value": "${database_user}"
+      },
+      {
+        "name": "PGHOST",
+        "value": "${database_host}"
+      },
+      {
+        "name": "PGPASSWORD",
+        "value": "${database_password}"
+      },
+      {
+        "name": "PGDATABASE",
+        "value": "${database_name}"
+      },
+      {
+        "name": "PGPORT",
+        "value": "${database_port}"
+      }      
     ]
   }
 ]

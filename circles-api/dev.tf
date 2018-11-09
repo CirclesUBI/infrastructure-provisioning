@@ -83,4 +83,9 @@ module "ecs" {
   region              = "${var.aws_region}"
   security_groups_ids = ["${module.networking.security_groups_ids}"]
   cognito_pool_id     = "${var.cognito_pool_id}"
+  database_name       = "${var.database_name}"
+  database_user       = "${var.database_user}"
+  database_host       = "${var.database_host}"
+  database_password   = "${var.database_password}"
+  database_port       = "${var.database_port}"  
 }

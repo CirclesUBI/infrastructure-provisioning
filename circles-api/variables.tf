@@ -69,3 +69,12 @@ variable "database_password" {
 variable "database_user" {
   description = "The admin username of the database"
 }
+
+variable "database_host" {
+  description = "Database host for the api"
+}
+
+variable "database_port" {
+  description = "Database port for the api"
+}
+

@@ -39,7 +39,7 @@ variable "availability_zones" {
   description = "The az that the resources will be launched"
 }
 
-variable "cidr_block" {
+variable "cidr_blocks" {
   type        = "list"
-  description = "The CIDR for the rds subnet"
+  description = "The CIDRs for the rds subnet"
 }

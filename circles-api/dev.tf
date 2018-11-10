@@ -67,7 +67,7 @@ module "rds" {
   instance_class          = "db.t2.micro"
   rds_instance_identifier = "${var.rds_instance_identifier}"
   availability_zones      = "${local.dev_availability_zones}"
-  cidr_block              = "${var.rds_private_cidrs}"
+  cidr_blocks             = "${var.rds_private_cidrs}"
 }
 
 module "ecs" {

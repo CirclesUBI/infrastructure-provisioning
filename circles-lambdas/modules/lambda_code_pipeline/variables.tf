@@ -6,33 +6,28 @@ variable "secret_key" {
   description = "AWS secret access key"
 }
 
-variable "aws_region" {
-  description = "The AWS region to create things in."
-  default     = "eu-central-1"
+variable "region" {
+  description = "The region to launch the bastion host"
+}
+
+variable "github_oauth_token" {
+  description = "The OAuth token for the github repo to pull code from"
 }
 
 variable "project" {
   description = "Project name."
-  default     = "circles"
 }
 
 variable "project_prefix" {
   description = "Name prefix for resources."
-  default     = "circles-lambdas"
-}
-
-variable "environment" {
-  description = "Environment setting."
-  default     = "dev"
 }
 
 variable "lambda_version" {
   description = "Lambda Version."
-  default     = "1.0.0"
 }
 
-variable "circles_lambdas_oauth_token" {
-  description = "The OAuth token for the github repo to pull code from"
+variable "environment" {
+  description = "Environment setting."
 }
 
 variable "lambda_function_name" {

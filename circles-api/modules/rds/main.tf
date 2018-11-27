@@ -1,7 +1,7 @@
 resource "aws_subnet" "rds" {
   count = "${length(var.availability_zones)}"
   vpc_id = "${var.vpc_id}"
-  cidr_block = "${element(var.cidr_block, count.index)}"
+  cidr_block = "${element(var.cidr_blocks, count.index)}"
   map_public_ip_on_launch = true
   availability_zone = "${element(var.availability_zones, count.index)}"
   tags {

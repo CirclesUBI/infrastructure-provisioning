@@ -38,3 +38,8 @@ variable "circles_lambdas_oauth_token" {
 variable "lambda_function_name" {
   description = "Name of the lambda function to be deployed"
 }
+
+variable "aws_cognito_pool_arn" {
+  description = "arn of the user cognito pool"
+}
+

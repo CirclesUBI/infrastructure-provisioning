@@ -40,10 +40,6 @@ resource "aws_lambda_permission" "cognito" {
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.this.arn}"
   principal     = "cognito-idp.amazonaws.com"
-
-  # The /*/* portion grants access from any method on any resource
-  # within the API Gateway "REST API".
-  // source_arn = "${aws_api_gateway_deployment.circles_api.execution_arn}/*/*"
   source_arn = "arn:aws:cognito-idp:eu-central-1:183869895864:userpool/*"
 }
 
@@ -51,7 +47,7 @@ resource "aws_lambda_permission" "cognito" {
 
 # IAM role which dictates what other AWS services can invoke the lambda
 resource "aws_iam_role" "lambda_exec" {
-  name = "serverless_example_lambda"
+  name = "${var.project_prefix}-role"
 
   assume_role_policy = <<EOF
 {
@@ -65,8 +61,52 @@ resource "aws_iam_role" "lambda_exec" {
       "Effect": "Allow",
       "Sid": ""
     }
+    
   ]
 }
 EOF
 }
 
+resource "aws_iam_policy" "lambda_policies" {
+  name        = "${var.project_prefix}-policy"
+  description = "Lambda policies for cognito access"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "allowAddingUserToGroup",
+      "Action": [
+        "cognito-idp:AdminAddUserToGroup" 
+      ],
+      "Effect": "Allow",
+      "Resource": "${var.aws_cognito_pool_arn}"
+    },
+    {
+        "Sid": "allowCreateLogGroup",
+        "Effect": "Allow",
+        "Action": "logs:CreateLogGroup",
+        "Resource": "arn:aws:logs:eu-central-1:183869895864"
+    },
+    {
+      "Sid": "allowLoggingToCloudWatch",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": [
+        "arn:aws:logs:eu-central-1:183869895864:log-group:/aws/lambda/*",
+        "arn:aws:logs:eu-central-1:183869895864:log-group:*:*:*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_attach" {
+  role       = "${aws_iam_role.lambda_exec.name}"
+  policy_arn = "${aws_iam_policy.lambda_policies.arn}"
+}

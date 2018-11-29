@@ -29,9 +29,8 @@ data "aws_ami" "amazon-linux-2" {
  }
 }
 
-
 locals {
-  availability_zones = ["${var.aws_region}a", "${var.aws_region}b"]
+  availability_zones = ["${var.aws_region}a", "${var.aws_region}b"]  
 }
 
 variable "blog_public_cidrs" {
@@ -59,7 +58,6 @@ resource "aws_launch_configuration" "circles_blog" {
   image_id        = "${data.aws_ami.amazon-linux-2.id}" #"ami-7c4f7097"
   instance_type   = "t2.micro"
   security_groups = ["${aws_security_group.circles_blog_sg.id}"]
-  key_name        = "${aws_key_pair.circles_blog.key_name}"
   user_data       = "${data.template_file.blog_cloud_config.rendered}"
   iam_instance_profile          = "${aws_iam_instance_profile.circles_blog.id}"
   associate_public_ip_address = true
@@ -76,7 +74,7 @@ module "asg" {
   source = "terraform-aws-modules/autoscaling/aws"
 
   name = "${var.project_prefix}-asg-service"
-  load_balancers = ["${module.elb.this_elb_id}"]
+  target_group_arns = ["${module.alb.target_group_arns}"]
 
   # Launch configuration
   launch_configuration          = "${aws_launch_configuration.circles_blog.name}"
@@ -160,50 +158,32 @@ resource "aws_autoscaling_policy" "scale_in_scaling_app" {
     autoscaling_group_name = "${module.asg.this_autoscaling_group_name}"
 }
 
-######
-# ELB
-######
-module "elb" {
-  source = "terraform-aws-modules/elb/aws"
 
-  name = "${var.project_prefix}-elb"
+######
+# ALB
+######
+module "alb" {
+  # source               = "./modules/alb"
+  source                        = "terraform-aws-modules/alb/aws"
+
+  vpc_id                        = "${var.circles_backend_vpc_id}"
+  load_balancer_name            = "${var.project_prefix}-alb"
 
   subnets         = ["${module.networking.public_subnets_id}"]
   security_groups = ["${aws_security_group.circles_blog_alb_sg.id}"]
-  internal        = false
+  
+  # enable_cross_zone_load_balancing = true
+  logging_enabled = false
 
-  listener = [
-    {
-      instance_port     = "80"
-      instance_protocol = "HTTP"
-      lb_port           = "80"
-      lb_protocol       = "HTTP"
-    },
-  ]
+  http_tcp_listeners            = "${list(map("port", "80", "protocol", "HTTP"))}"
+  http_tcp_listeners_count      = "1"
+  https_listeners               = "${list(map("certificate_arn", "arn:aws:acm:eu-central-1:183869895864:certificate/64369cee-a0c2-4eb3-9123-be01fba83bd9", "port", 443))}"
+  https_listeners_count         = "1"
+  target_groups                 = "${list(map("name", "circles-blog-http", "backend_protocol", "HTTP", "backend_port", "80"))}" # , map("name", "circles-blog-https", "backend_protocol", "HTTPS", "backend_port", "443" )
+  target_groups_count           = "1"
 
-  health_check = [
-    {
-      target              = "HTTP:80/"
-      interval            = 30
-      healthy_threshold   = 2
-      unhealthy_threshold = 2
-      timeout             = 5
-    },
-  ]
-
-  tags = {
-    Name        = "${var.project_prefix}-logs"
-    Environment = "${var.environment}"
-  }
+  tags                          = "${map("Environment", "${var.environment}", "Name", "${var.project_prefix}-alb")}"
 }
-
-resource "aws_lb_cookie_stickiness_policy" "blog" {
-  name                     = "${var.project_prefix}-cookie-policy"
-  load_balancer            = "${module.elb.this_elb_id}"
-  lb_port                  = 80
-  cookie_expiration_period = 600
-}
-
 
 data "template_file" "blog_cloud_config" {
   template = "${file("blog_cloud-config.yml")}"
@@ -215,12 +195,6 @@ data "template_file" "blog_cloud_config" {
 }
 
 
-resource "aws_key_pair" "circles_blog" {
-  key_name   = "blog-key"
-  public_key = "${file("ssh/insecure-deployer.pub")}"
-}
-
-
 resource "aws_security_group" "circles_blog_sg" {
   name    = "${var.project_prefix}-sg"
   vpc_id  = "${var.circles_backend_vpc_id}"
@@ -229,13 +203,6 @@ resource "aws_security_group" "circles_blog_sg" {
     from_port = 80
     to_port = 80
     protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 22
-    to_port     = 22
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -252,15 +219,6 @@ resource "aws_security_group" "circles_blog_sg" {
   lifecycle {
     create_before_destroy = true
   }
-}
-
-resource "aws_security_group_rule" "ssh" {
-  security_group_id = "${aws_security_group.circles_blog_sg.id}"
-  type = "ingress"
-  from_port = 22
-  to_port = 22
-  protocol = "tcp"
-  cidr_blocks = ["0.0.0.0/32"]
 }
 
 resource "aws_security_group" "circles_blog_alb_sg" {

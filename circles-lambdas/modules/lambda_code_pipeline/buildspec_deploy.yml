@@ -1,0 +1,15 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Entered the pre_build phase ...
+      - pip install awscli --upgrade --user
+      - echo $(ls)
+  build:
+    commands:
+      - echo Deploy started on `date`
+      - aws lambda update-function-code --function-name ${lambda_function_name} --zip-file fileb://index.zip
+  post_build:
+    commands:
+      - echo Deploy completed on `date`

@@ -47,9 +47,6 @@ resource "aws_lambda_function" "this" {
 
   environment {
     variables = {
-      # AWS_REGION = "${var.aws_region}"
-      # AWS_ACCESS_KEY_ID = "${var.access_key}"
-      # AWS_SECRET_ACCESS_KEY = "${var.secret_key}"
       ANDROID_ARN = "${data.terraform_remote_state.circles_sns.gcm_platform_arn}"
     }
   }

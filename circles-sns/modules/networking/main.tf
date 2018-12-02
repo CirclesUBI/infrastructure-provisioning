@@ -1,6 +1,3 @@
-
-data "aws_availability_zones" "available" {}
-
 /* Elastic IP for NAT */
 resource "aws_eip" "network_eip" {
   vpc        = true

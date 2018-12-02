@@ -16,9 +16,8 @@ variable "circles_backend_vpc_id" {
 }
 
 variable "circles_backend_igw_id" {
-  description = "The Circles backend Internet Gatway shared by public subnets."  
+  description = "The Circles backend Internet Gateway shared by public subnets."  
 }
-
 
 variable "project_prefix" {
   description = "Name prefix for resources."
@@ -53,4 +52,20 @@ variable "cognito_pool_id" {
 
 variable "circles_api_github_oauth_token" {
   description = "OAuth Token for the circles-api github repo. https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/"
+}
+
+variable "rds_instance_identifier" {
+  description = "The identifier for the rds instance"
+} 
+
+variable "database_name" {
+  description = "The name of the database"
+}
+
+variable "database_password" {
+  description = "The password of the admin user of the database"
+}
+
+variable "database_user" {
+  description = "The admin username of the database"
 }

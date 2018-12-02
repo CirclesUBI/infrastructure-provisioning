@@ -1,0 +1,21 @@
+#cloud-config
+
+package_update: true
+
+users:
+  - default
+
+packages:
+ - git
+
+runcmd:
+  # env vars
+  - export ANDROID_ARN=${sns_android_platform_arn}
+  - export AWS_ACCESS_KEY_ID=${access_key}
+  - export AWS_SECRET_ACCESS_KEY=${secret_key}
+  # clone repo
+  - git clone https://github.com/CirclesUBI/circles-sns.git
+  # Install node
+  - curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
+  - nvm install node
+  - node -e "console.log('Running Node.js ' + process.version)"

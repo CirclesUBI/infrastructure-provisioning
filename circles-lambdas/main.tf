@@ -8,6 +8,17 @@ terraform {
   }
 }
 
+data "terraform_remote_state" "circles_sns" {
+  backend = "s3"
+  config {
+    bucket         = "circles-sns-terraform"
+    region         = "eu-central-1"
+    key            = "circles-sns-terraform.tfstate"
+    dynamodb_table = "circles-sns-terraform"
+    encrypt        = true
+  }
+}
+
 provider "aws" {
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
@@ -33,6 +44,15 @@ resource "aws_lambda_function" "this" {
   handler         = "index.handler"
   runtime         = "nodejs8.10"
   role            = "${aws_iam_role.lambda_exec.arn}"
+
+  environment {
+    variables = {
+      # AWS_REGION = "${var.aws_region}"
+      # AWS_ACCESS_KEY_ID = "${var.access_key}"
+      # AWS_SECRET_ACCESS_KEY = "${var.secret_key}"
+      ANDROID_ARN = "${data.terraform_remote_state.circles_sns.gcm_platform_arn}"
+    }
+  }
 }
 
 resource "aws_lambda_permission" "cognito" {
@@ -88,6 +108,12 @@ resource "aws_iam_policy" "lambda_policies" {
         "Effect": "Allow",
         "Action": "logs:CreateLogGroup",
         "Resource": "arn:aws:logs:eu-central-1:183869895864"
+    },
+    {
+        "Sid": "allowAddSNSUser",
+        "Effect": "Allow",
+        "Action": "sns:CreatePlatformEndpoint",
+        "Resource": "*"
     },
     {
       "Sid": "allowLoggingToCloudWatch",

@@ -45,11 +45,3 @@ variable "delivery_status_iam_role_arn" {
 variable "sms_log_bucket" {
   default = "s3 bucket for sms usage logs."
 }
-
-variable "circles_backend_vpc_id" {
-  description = "The Circles backend VPC to create resources in."  
-}
-
-variable "circles_backend_igw_id" {
-  description = "The Circles backend Internet Gateway shared by public subnets."  
-}

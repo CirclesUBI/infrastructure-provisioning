@@ -37,15 +37,3 @@ variable "cloud_config" {
   description = "cloud-config file to be applied on instance launch"
   default     = ""
 }
-
-variable "circles_backend_vpc_id" {
-  description = "The Circles backend VPC to create resources in."  
-}
-
-variable "circles_backend_igw_id" {
-  description = "The Circles backend Internet Gateway shared by public subnets."  
-}
-
-variable "blog_s3_backup_bucket" {
-  description = "s3 bucket name to backup to."  
-}

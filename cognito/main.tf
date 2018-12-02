@@ -22,7 +22,8 @@ data "terraform_remote_state" "circles_lambdas" {
     key            = "circles-lambdas-terraform.tfstate"
     dynamodb_table = "circles-lambdas-terraform"
     encrypt        = true
-  }}
+  }
+}
 
 
 resource "aws_cognito_user_pool" "users" {

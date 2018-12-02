@@ -36,8 +36,8 @@ resource "aws_sns_platform_application" "gcm_application" {
 module "sms" {
   source                        = "./modules/sms"
   providers                     = {aws = "aws.ireland"}
-  delivery_status_iam_role_arn  = "${var.delivery_status_iam_role_arn}"
-  sms_log_bucket                = "${var.sms_log_bucket}"
+  delivery_status_iam_role_arn  = "${aws_iam_role.sns_sms_feedback.arn}"
+  sms_log_bucket                = "circles-sns-sms-daily-usage"
 }
 
 # notifs
@@ -127,3 +127,48 @@ data "aws_iam_policy_document" "sns_transfer" {
 #   protocol  = "sqs"
 #   endpoint  = "${aws_sqs_queue.transfer.arn}"
 # }
+
+resource "aws_iam_role" "sns_sms_feedback" {
+  name = "${var.project_prefix}-sms-feedback"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "sns.amazonaws.com"
+      },
+      "Action":"sts:AssumeRole"
+    }
+  ]  
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "sns_sms_feedback" {
+  name = "${var.project_prefix}-sms-policy"
+  role = "${aws_iam_role.sns_sms_feedback.id}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:PutMetricFilter",
+        "logs:PutRetentionPolicy"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}

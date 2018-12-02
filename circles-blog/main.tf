@@ -15,6 +15,17 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
+data "terraform_remote_state" "circles_backend" {
+  backend = "s3"
+  config {
+    bucket         = "circles-rocketchat-terraform"
+    region         = "eu-central-1"
+    key            = "circles-rocketchat-terraform.tfstate"
+    dynamodb_table = "circles-rocketchat-terraform"
+    encrypt        = true
+  }
+}
+
 data "aws_ami" "amazon-linux-2" {
  most_recent = true
 
@@ -45,8 +56,8 @@ module "networking" {
   source               = "./modules/networking"
   project_prefix       = "${var.project_prefix}"
   environment          = "${var.environment}"
-  vpc_id               = "${var.circles_backend_vpc_id}"
-  igw_id               = "${var.circles_backend_igw_id}" 
+  vpc_id               = "${data.terraform_remote_state.circles_backend.vpc_id}"
+  igw_id               = "${data.terraform_remote_state.circles_backend.igw_id}"
   public_subnets_cidr  = "${var.blog_public_cidrs}"
   private_subnets_cidr = "${var.blog_private_cidrs}"
   region               = "${var.aws_region}"
@@ -166,7 +177,7 @@ module "alb" {
   # source               = "./modules/alb"
   source                        = "terraform-aws-modules/alb/aws"
 
-  vpc_id                        = "${var.circles_backend_vpc_id}"
+  vpc_id                        = "${data.terraform_remote_state.circles_backend.vpc_id}"
   load_balancer_name            = "${var.project_prefix}-alb"
 
   subnets         = ["${module.networking.public_subnets_id}"]
@@ -197,7 +208,7 @@ data "template_file" "blog_cloud_config" {
 
 resource "aws_security_group" "circles_blog_sg" {
   name    = "${var.project_prefix}-sg"
-  vpc_id  = "${var.circles_backend_vpc_id}"
+  vpc_id  = "${data.terraform_remote_state.circles_backend.vpc_id}"
   
   ingress {
     from_port = 80
@@ -224,7 +235,7 @@ resource "aws_security_group" "circles_blog_sg" {
 resource "aws_security_group" "circles_blog_alb_sg" {
   name = "${var.project_prefix}-alb-sg"
   description = "controls access to the application ALB"
-  vpc_id  = "${var.circles_backend_vpc_id}"  
+  vpc_id  = "${data.terraform_remote_state.circles_backend.vpc_id}"  
 
   ingress {
     protocol    = "tcp"
@@ -301,7 +312,7 @@ data "template_file" "instance_profile" {
     app_log_group_arn = "${aws_cloudwatch_log_group.blog.arn}"
     net_log_group_arn = "${module.networking.log_group_arn}"
     region            = "${var.aws_region}"
-    s3_bucket         = "${var.blog_s3_backup_bucket}"
+    s3_bucket         = "${var.project_prefix}-backup"
   }
 }
 

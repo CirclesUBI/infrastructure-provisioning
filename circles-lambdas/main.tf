@@ -19,6 +19,18 @@ data "terraform_remote_state" "circles_sns" {
   }
 }
 
+data "terraform_remote_state" "cognito" {
+  backend = "s3"
+  config {
+    bucket         = "circles-resources-terraform"
+    region         = "eu-central-1"
+    key            = "circles-cognito-terraform.tfstate"
+    dynamodb_table = "circles-cognito-terraform"
+    encrypt        = true
+  }
+}
+
+
 provider "aws" {
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
@@ -38,7 +50,7 @@ module "code_pipeline" {
   secret_key                  = "${var.secret_key}"
 }
 
-resource "aws_lambda_function" "this" {
+resource "aws_lambda_function" "confirm_user" {
   function_name   = "${var.lambda_function_name}"
   filename        = "index.zip"
   handler         = "index.handler"
@@ -52,17 +64,18 @@ resource "aws_lambda_function" "this" {
   }
 }
 
+# ????redundant since this permission is stated below in lambda_policies
+
 resource "aws_lambda_permission" "cognito" {
   statement_id  = "AllowCognitoInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.this.arn}"
+  function_name = "${aws_lambda_function.confirm_user.function_name}"
   principal     = "cognito-idp.amazonaws.com"
-  source_arn = "arn:aws:cognito-idp:eu-central-1:183869895864:userpool/*"
+  source_arn    = "${data.terraform_remote_state.cognito.cognito_userpool_arn}"
 }
 
 # ROLES
 
-# IAM role which dictates what other AWS services can invoke the lambda
 resource "aws_iam_role" "lambda_exec" {
   name = "${var.project_prefix}-role"
 
@@ -77,8 +90,7 @@ resource "aws_iam_role" "lambda_exec" {
       },
       "Effect": "Allow",
       "Sid": ""
-    }
-    
+    }    
   ]
 }
 EOF
@@ -98,7 +110,7 @@ resource "aws_iam_policy" "lambda_policies" {
         "cognito-idp:AdminAddUserToGroup" 
       ],
       "Effect": "Allow",
-      "Resource": "${var.aws_cognito_pool_arn}"
+      "Resource": "${data.terraform_remote_state.cognito.cognito_userpool_arn}"
     },
     {
         "Sid": "allowCreateLogGroup",

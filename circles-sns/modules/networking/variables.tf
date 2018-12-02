@@ -6,10 +6,6 @@ variable "igw_id" {
   description = "The id of the internet gateway."
 }
 
-variable "region" {
-  description = "AWS region."  
-}
-
 variable "public_subnets_cidr" {
   type        = "list"
   description = "The CIDR block for the public subnet"

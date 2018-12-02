@@ -6,12 +6,9 @@ variable "secret_key" {
   description = "AWS secret access key"
 }
 
-variable "sns_aws_region" {
-  description = "The AWS region to create SNS resources in."  
-}
-
-variable "service_region" {
-  description = "The AWS region to create the service instances in."  
+variable "region" {
+  description = "The AWS region to create the resources in."  
+  default     = "eu-central-1"
 }
 
 variable "project" {

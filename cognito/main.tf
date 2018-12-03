@@ -45,15 +45,15 @@ resource "aws_cognito_user_pool" "users" {
   } 
 
   password_policy {
-    minimum_length = 8
-    require_lowercase = false
-    require_numbers = false
-    require_symbols = false
-    require_uppercase = false
+    minimum_length = "${var.password_policy_minimum_length}"
+    require_lowercase = "${var.password_policy_require_lowercase}"
+    require_numbers = "${var.password_policy_require_numbers}"
+    require_symbols = "${var.password_policy_require_symbols}"
+    require_uppercase = "${var.password_policy_require_uppercase}"
   }
 
   sms_configuration {
-    external_id = "887b8191-7280-481a-9b8b-e836cc619c87"
+    external_id = "${var.sms_configuration_external_id}" 
     sns_caller_arn = "${aws_iam_role.cidp_sms.arn}"
   }
   

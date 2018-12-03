@@ -24,3 +24,24 @@ variable "environment" {
   description = "Environment setting."
   default     = "dev"
 }
+
+variable "password_policy_minimum_length" {
+  
+}
+
+variable "password_policy_require_lowercase" {
+}
+
+variable "password_policy_require_symbols" {
+}
+
+variable "password_policy_require_uppercase" {
+}
+
+variable "password_policy_require_numbers" {
+}
+
+variable "sms_configuration_external_id" {
+  
+}
+

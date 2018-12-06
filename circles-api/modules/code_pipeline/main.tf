@@ -46,22 +46,22 @@ resource "aws_iam_role_policy" "codebuild_policy" {
   policy      = "${data.template_file.codebuild_policy.rendered}"
 }
 
-data "template_file" "buildspec" {
-  template = "${file("${path.module}/buildspec.yml")}"
+data "template_file" "buildspec_test" {
+  template = "${file("${path.module}/buildspec_test.yml")}"
+}
+
+data "template_file" "buildspec_build" {
+  template = "${file("${path.module}/buildspec_build.yml")}"
 
   vars {
     repository_url     = "${var.repository_url}"
-    image_name         = "${var.project_prefix}"
     region             = "${var.region}"
-    cluster_name       = "${var.ecs_cluster_name}"
-    subnet_id          = "${var.run_task_subnet_id}"
-    security_group_ids = "${join(",", var.run_task_security_group_ids)}"
   }
 }
 
 
-resource "aws_codebuild_project" "circles_api" {
-  name          = "${var.project_prefix}-codebuild"
+resource "aws_codebuild_project" "build" {
+  name          = "${var.project_prefix}-build"
   build_timeout = "10"
   service_role  = "${aws_iam_role.codebuild_role.arn}"
   # badge_enabled  = true // InvalidInputException: Build badges are not supported for CodePipeline source
@@ -80,7 +80,61 @@ resource "aws_codebuild_project" "circles_api" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = "${data.template_file.buildspec.rendered}"
+    buildspec = "${data.template_file.buildspec_build.rendered}"
+  }
+}
+
+resource "aws_codebuild_project" "test" {
+  name          = "${var.project_prefix}-test"
+  build_timeout = "5"
+  service_role  = "${aws_iam_role.codebuild_role.arn}"
+  # badge_enabled  = true // InvalidInputException: Build badges are not supported for CodePipeline source
+
+  vpc_config {
+    security_group_ids = ["${var.run_task_security_group_ids}"]
+    subnets = ["${var.run_task_subnet_id}", "${var.db_subnet_id}"]
+    vpc_id = "${var.vpc_id}"
+  }
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  environment {
+    compute_type    = "BUILD_GENERAL1_SMALL"
+    // https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html
+    image           = "aws/codebuild/nodejs:10.1.0"
+    type            = "LINUX_CONTAINER"
+
+    environment_variable {
+      name  = "PGUSER"
+      value = "${var.database_user}"
+    }
+
+    environment_variable {
+      name  = "PGHOST"
+      value = "${var.database_host}"
+    }
+
+    environment_variable {
+      name  = "PGPASSWORD"
+      value = "${var.database_password}"
+    }
+
+    environment_variable {
+      name  = "PGDATABASE"
+      value = "${var.database_name}"
+    }
+
+    environment_variable {
+      name  = "PGPORT"
+      value = "${var.database_port}"
+    }
+  }
+
+  source {
+    type      = "CODEPIPELINE"
+    buildspec = "${data.template_file.buildspec_test.rendered}"
   }
 }
 
@@ -104,13 +158,31 @@ resource "aws_codepipeline" "pipeline" {
       owner            = "ThirdParty"
       provider         = "GitHub"
       version          = "1"
-      output_artifacts = ["source"]
+      output_artifacts = ["source-1"]
 
       configuration {
         Owner      = "CirclesUBI"
         Repo       = "circles-api"
-        Branch     = "master"
+        Branch     = "feature/endToEndRequest"
         OAuthToken = "${var.github_oauth_token}"
+      }
+    }
+  }
+
+  stage {
+    name = "Test"
+
+    action {
+      name             = "Test"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      version          = "1"
+      input_artifacts  = ["source-1"]
+      output_artifacts = ["source-2"]
+
+      configuration {
+        ProjectName = "${var.project_prefix}-test"
       }
     }
   }
@@ -124,11 +196,11 @@ resource "aws_codepipeline" "pipeline" {
       owner            = "AWS"
       provider         = "CodeBuild"
       version          = "1"
-      input_artifacts  = ["source"]
+      input_artifacts  = ["source-2"]
       output_artifacts = ["imagedefinitions"]
 
       configuration {
-        ProjectName = "${var.project_prefix}-codebuild"
+        ProjectName = "${var.project_prefix}-build"
       }
     }
   }

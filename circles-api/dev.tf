@@ -57,7 +57,7 @@ variable "rds_public_cidrs" {
 
 variable "rds_private_cidrs" {
   default = ["10.0.3.128/26", "10.0.3.192/26"]
-}
+
 
 module "networking" {
   source               = "./modules/networking"
@@ -102,5 +102,5 @@ module "ecs" {
   database_user       = "${var.database_user}"
   database_host       = "${var.database_host}"
   database_password   = "${var.database_password}"
-  database_port       = "${var.database_port}" 
+  database_port       = "${var.database_port}"
 }

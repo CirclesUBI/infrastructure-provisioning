@@ -260,38 +260,38 @@ data "template_file" "rc_task_definition" {
   }
 }
 
-data "template_file" "ubibot_task_definition" {
-  template   = "${file("${path.module}/ubibot-task-def.json")}"
-  depends_on = ["aws_ecs_service.rocketchat", "aws_alb.rocketchat"]
+# data "template_file" "ubibot_task_definition" {
+#   template   = "${file("${path.module}/ubibot-task-def.json")}"
+#   depends_on = ["aws_ecs_service.rocketchat", "aws_alb.rocketchat"]
 
-  vars {
-    access_key             = "${var.access_key}"
-    secret_key             = "${var.secret_key}"
-    aws_region             = "${var.aws_region}"
-    log_group_name         = "${aws_cloudwatch_log_group.rocketchat.name}"
-    rocketchat_url         = "${aws_alb.rocketchat.dns_name}"
-    ubibot_password        = "${var.ubibot_password}"
-    ubibot_github_user     = "${var.ubibot_github_user}"
-    ubibot_github_password = "${var.ubibot_github_password}"
-    redis_commander_user   = "${var.redis_commander_user}"
-    redis_commander_pass   = "${var.redis_commander_pass}"
-  }
-}
+#   vars {
+#     access_key             = "${var.access_key}"
+#     secret_key             = "${var.secret_key}"
+#     aws_region             = "${var.aws_region}"
+#     log_group_name         = "${aws_cloudwatch_log_group.rocketchat.name}"
+#     rocketchat_url         = "${aws_alb.rocketchat.dns_name}"
+#     ubibot_password        = "${var.ubibot_password}"
+#     ubibot_github_user     = "${var.ubibot_github_user}"
+#     ubibot_github_password = "${var.ubibot_github_password}"
+#     redis_commander_user   = "${var.redis_commander_user}"
+#     redis_commander_pass   = "${var.redis_commander_pass}"
+#   }
+# }
 
 resource "aws_ecs_task_definition" "rocketchat" {
   family                = "rocketchat-td"
   container_definitions = "${data.template_file.rc_task_definition.rendered}"
 }
 
-resource "aws_ecs_task_definition" "ubibot" {
-  family                = "ubibot-td"
-  container_definitions = "${data.template_file.ubibot_task_definition.rendered}"
+# resource "aws_ecs_task_definition" "ubibot" {
+#   family                = "ubibot-td"
+#   container_definitions = "${data.template_file.ubibot_task_definition.rendered}"
 
-  volume {
-    name      = "redis"
-    host_path = "/data/redis"
-  }
-}
+#   volume {
+#     name      = "redis"
+#     host_path = "/data/redis"
+#   }
+# }
 
 resource "aws_ecs_service" "rocketchat" {
   name                               = "rocketchat-ecs-service"
@@ -315,19 +315,19 @@ resource "aws_ecs_service" "rocketchat" {
   ]
 }
 
-resource "aws_ecs_service" "ubibot" {
-  name            = "ubibot-ecs-service"
-  cluster         = "${aws_ecs_cluster.rocketchat.id}"
-  task_definition = "${aws_ecs_task_definition.ubibot.arn}"
-  desired_count   = 1
+# resource "aws_ecs_service" "ubibot" {
+#   name            = "ubibot-ecs-service"
+#   cluster         = "${aws_ecs_cluster.rocketchat.id}"
+#   task_definition = "${aws_ecs_task_definition.ubibot.arn}"
+#   desired_count   = 1
 
-  depends_on = [
-    "aws_iam_role_policy.ecs_service",
-    "aws_alb_listener.rocketchat_http",
-    "aws_alb_listener.rocketchat_https",
-    "aws_ecs_service.rocketchat",
-  ]
-}
+#   depends_on = [
+#     "aws_iam_role_policy.ecs_service",
+#     "aws_alb_listener.rocketchat_http",
+#     "aws_alb_listener.rocketchat_https",
+#     "aws_ecs_service.rocketchat",
+#   ]
+# }
 
 ## IAM
 

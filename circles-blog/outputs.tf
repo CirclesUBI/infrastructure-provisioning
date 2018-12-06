@@ -1,5 +1,5 @@
 output "alb-dns" {
-  value = "${module.elb.this_elb_dns_name}"
+  value = "${module.alb.dns_name}"
 }
 
 output "image" {

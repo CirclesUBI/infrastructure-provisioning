@@ -11,9 +11,14 @@ variable "aws_region" {
   default     = "eu-central-1"
 }
 
+variable "project" {
+  description = "Project name."
+  default     = "circles"
+}
+
 variable "project_prefix" {
   description = "Name prefix for resources."
-  default     = "circles-blog"
+  default     = "circles-lambdas"
 }
 
 variable "environment" {
@@ -21,19 +26,15 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "smtp_host" {
-  description = "SMTP host"
+variable "lambda_version" {
+  description = "Lambda Version."
+  default     = "1.0.0"
 }
 
-variable "smtp_username" {
-  description = "SMTP username"
+variable "circles_lambdas_oauth_token" {
+  description = "The OAuth token for the github repo to pull code from"
 }
 
-variable "smtp_password" {
-  description = "SMTP password"
-}
-
-variable "cloud_config" {
-  description = "cloud-config file to be applied on instance launch"
-  default     = ""
+variable "lambda_function_name" {
+  description = "Name of the lambda function to be deployed"
 }

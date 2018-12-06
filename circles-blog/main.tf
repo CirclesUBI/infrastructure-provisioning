@@ -15,6 +15,7 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
+
 data "terraform_remote_state" "circles_backend" {
   backend = "s3"
   config {
@@ -41,7 +42,7 @@ data "aws_ami" "amazon-linux-2" {
 }
 
 locals {
-  availability_zones = ["${var.aws_region}a", "${var.aws_region}b"]  
+  availability_zones = ["${var.aws_region}a", "${var.aws_region}b"]
 }
 
 variable "blog_public_cidrs" {
@@ -205,7 +206,6 @@ data "template_file" "blog_cloud_config" {
   }
 }
 
-
 resource "aws_security_group" "circles_blog_sg" {
   name    = "${var.project_prefix}-sg"
   vpc_id  = "${data.terraform_remote_state.circles_backend.vpc_id}"
@@ -266,7 +266,6 @@ resource "aws_security_group" "circles_blog_alb_sg" {
     Environment = "${var.environment}"
   }
 }
-
 
 resource "aws_cloudwatch_log_group" "blog" {
   name              = "${var.project_prefix}-logs"

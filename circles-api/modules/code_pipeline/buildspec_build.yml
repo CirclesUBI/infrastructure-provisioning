@@ -6,8 +6,10 @@ phases:
       - echo Logging in to Amazon ECR...
       - aws --version
       - $(aws ecr get-login --region ${region} --no-include-email)
+      - IMAGE_TAG=`cat image_tag.txt`
       - REPOSITORY_URI=${repository_url}
-      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - echo REPOSITORY_URI $REPOSITORY_URI
+      - echo IMAGE_TAG $IMAGE_TAG
       - echo Entered the pre_build phase...
   build:
     commands:
@@ -21,8 +23,6 @@ phases:
       - echo Pushing the Docker images...
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo $REPOSITORY_URI
-      - echo $IMAGE_TAG
       - echo Writing image definitions file...
       - printf '[{"name":"circles-api-ecr","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json      
 artifacts:

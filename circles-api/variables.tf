@@ -30,14 +30,6 @@ variable "availability_zones" {
   default = ["eu-central-1a", "eu-central-1b"]
 }
 
-variable "public_subnets_cidr" {
-  default = ["10.1.1.0/24", "10.1.2.0/24"]
-}
-
-variable "private_subnets_cidr" {
-  default = ["10.1.10.1/24", "10.1.20.0/24"]
-}
-
 variable "circles_api_github_oauth_token" {
   description = "OAuth Token for the circles-api github repo. https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/"
 }
@@ -56,4 +48,12 @@ variable "database_password" {
 
 variable "database_user" {
   description = "The admin username of the database"
+}
+
+variable "database_host" {
+  description = "Database host for the api"
+}
+
+variable "database_port" {
+  description = "Database port for the api"
 }

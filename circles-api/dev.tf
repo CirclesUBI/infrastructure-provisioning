@@ -51,6 +51,14 @@ variable "api_private_cidrs" {
   default = ["10.0.2.128/26", "10.0.2.192/26"]
 }
 
+variable "rds_public_cidrs" {
+  default = ["10.0.3.0/26", "10.0.3.64/26"]
+}
+
+variable "rds_private_cidrs" {
+  default = ["10.0.3.128/26", "10.0.3.192/26"]
+
+
 module "networking" {
   source               = "./modules/networking"
   project_prefix       = "${var.project_prefix}"
@@ -75,6 +83,7 @@ module "rds" {
   instance_class          = "db.t2.micro"
   rds_instance_identifier = "${var.rds_instance_identifier}"
   availability_zones      = "${local.dev_availability_zones}"
+  cidr_blocks             = "${var.rds_private_cidrs}"
 }
 
 module "ecs" {
@@ -83,11 +92,15 @@ module "ecs" {
   environment         = "${var.environment}"
   vpc_id              = "${data.terraform_remote_state.circles_backend.vpc_id}"
   availability_zones  = "${local.dev_availability_zones}"
-  # repository_name     = "${var.project_prefix}/${var.environment}"
   repository_name     = "${var.project_prefix}-ecr"  
   subnets_ids         = ["${module.networking.private_subnets_id}"]
   public_subnet_ids   = ["${module.networking.public_subnets_id}"]
   region              = "${var.aws_region}"
   security_groups_ids = ["${module.networking.security_groups_ids}"]
   cognito_pool_id     = "${data.terraform_remote_state.cognito.cognito_userpool_id}"
+  database_name       = "${var.database_name}"
+  database_user       = "${var.database_user}"
+  database_host       = "${var.database_host}"
+  database_password   = "${var.database_password}"
+  database_port       = "${var.database_port}"
 }

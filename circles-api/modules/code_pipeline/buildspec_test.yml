@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:       
+      - echo Installing node packages ...      
+      - npm install
+      - echo Entered the pre_build phase...
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Starting migrations ...
+      - npm run migrate:up
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo cleaning up ...
+      - rm -rf node_modules
+      - (echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7) > image_tag.txt
+artifacts:
+  files: '**/*'

@@ -33,6 +33,28 @@
         "${aws_s3_bucket_arn}",
         "${aws_s3_bucket_arn}/*"
       ]
+    },
+    {
+      "Effect": "Allow", 
+      "Action": [
+        "ec2:*"              
+      ], 
+      "Resource": "*" 
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterfacePermission"
+      ],
+      "Resource": "arn:aws:ec2:eu-central-1:183869895864:network-interface/*",
+      "Condition": {
+        "StringEquals": { 
+          "ec2:Subnet": [
+            "arn:aws:ec2:eu-central-1:183869895864:subnet/circles-api-eu-central-1a-private-subnet"
+          ],
+          "ec2:AuthorizedService": "codebuild.amazonaws.com"
+        }
+      }
     }
   ]
 }

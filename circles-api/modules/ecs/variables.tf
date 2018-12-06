@@ -41,3 +41,23 @@ variable "repository_name" {
 variable "cognito_pool_id" {
   description = "Cognito pool for circles users."
 }
+
+variable "database_name" {
+  description = "Database name for the api"
+}
+
+variable "database_password" {
+  description = "Database password for the api"
+}
+
+variable "database_user" {
+  description = "Database user for the api"
+}
+
+variable "database_host" {
+  description = "Database host for the api"
+}
+
+variable "database_port" {
+  description = "Database port for the api"
+}

@@ -38,6 +38,11 @@ data "template_file" "api_task" {
     log_group_region  = "${var.region}"
     cognito_pool_id   = "${var.cognito_pool_id}" 
     region            = "${var.region}"
+    database_name     = "${var.database_name}"
+    database_user     = "${var.database_user}"
+    database_host     = "${var.database_host}"
+    database_password = "${var.database_password}"
+    database_port     = "${var.database_port}"   
   }
 }
 

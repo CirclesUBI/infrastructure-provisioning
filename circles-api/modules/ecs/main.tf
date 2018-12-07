@@ -291,8 +291,8 @@ resource "aws_appautoscaling_target" "circles_api" {
   resource_id        = "service/${aws_ecs_cluster.circles_api.name}/${aws_ecs_service.circles_api.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   role_arn           = "${aws_iam_role.ecs_autoscale_role.arn}"
-  min_capacity       = 2
-  max_capacity       = 4
+  min_capacity       = 1
+  max_capacity       = 2
 }
 
 resource "aws_appautoscaling_policy" "up" {

@@ -57,7 +57,7 @@ variable "rds_public_cidrs" {
 
 variable "rds_private_cidrs" {
   default = ["10.0.3.128/26", "10.0.3.192/26"]
-
+}
 
 module "networking" {
   source               = "./modules/networking"

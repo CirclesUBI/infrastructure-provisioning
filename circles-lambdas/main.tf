@@ -30,6 +30,16 @@ data "terraform_remote_state" "cognito" {
   }
 }
 
+data "terraform_remote_state" "circles_api" {
+  backend = "s3"
+  config {
+    bucket         = "circles-api-terraform"
+    region         = "eu-central-1"
+    key            = "circles-api-terraform.tfstate"
+    dynamodb_table = "circles-api-terraform"
+    encrypt        = true
+  }
+}
 
 provider "aws" {
   access_key = "${var.access_key}"
@@ -59,12 +69,15 @@ resource "aws_lambda_function" "confirm_user" {
 
   environment {
     variables = {
-      ANDROID_ARN = "${data.terraform_remote_state.circles_sns.gcm_platform_arn}"
+      ANDROID_ARN   = "${data.terraform_remote_state.circles_sns.gcm_platform_arn}"
+      PGUSER        = "${data.terraform_remote_state.circles_api.db_username}"
+      PGHOST        = "${data.terraform_remote_state.circles_api.db_host}"
+      PGPASSWORD    = "${var.circles_api_db_password}"
+      PGDATABASE    = "${data.terraform_remote_state.circles_api.db_name}"
+      PGPORT        = "${data.terraform_remote_state.circles_api.db_port}"      
     }
   }
 }
-
-# ????redundant since this permission is stated below in lambda_policies
 
 resource "aws_lambda_permission" "cognito" {
   statement_id  = "AllowCognitoInvoke"

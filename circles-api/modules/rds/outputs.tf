@@ -18,3 +18,8 @@ output "db_host" {
   value = "${aws_db_instance.default.address}"
 }
 
+output "db_security_group" {
+  value = "${aws_security_group.rds.id}"
+}
+
+

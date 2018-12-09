@@ -30,7 +30,8 @@ variable "instance_class" {
   description = "The type of instance to use"
 }
 
-variable "ecs_security_group" {
+variable "security_groups" {
+  type        = "list"
   description = "The security group of the api ecs instance"
 }
 

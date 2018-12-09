@@ -25,3 +25,8 @@ output "db_username" {
 output "db_host" {
   value = "${module.rds.db_host}"
 }
+
+output "db_security_group" {
+  value = "${module.rds.db_security_group}"
+}
+

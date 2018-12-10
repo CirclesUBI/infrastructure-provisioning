@@ -8,7 +8,7 @@ phases:
     commands:
       - echo Build started on `date`
       - cd ${lambda_function_name}
-      - npm install
+      # - npm install
       - zip -r ../index.zip ./*
   post_build:
     commands:

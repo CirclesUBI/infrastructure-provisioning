@@ -30,7 +30,6 @@ data "terraform_remote_state" "cognito" {
   }
 }
 
-
 provider "aws" {
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
@@ -59,12 +58,10 @@ resource "aws_lambda_function" "confirm_user" {
 
   environment {
     variables = {
-      ANDROID_ARN = "${data.terraform_remote_state.circles_sns.gcm_platform_arn}"
+      ANDROID_ARN   = "${data.terraform_remote_state.circles_sns.gcm_platform_arn}"
     }
   }
 }
-
-# ????redundant since this permission is stated below in lambda_policies
 
 resource "aws_lambda_permission" "cognito" {
   statement_id  = "AllowCognitoInvoke"
@@ -119,6 +116,14 @@ resource "aws_iam_policy" "lambda_policies" {
         "Resource": "arn:aws:logs:eu-central-1:183869895864"
     },
     {
+        "Sid": "allowDBAccess",
+        "Effect": "Allow",
+        "Action": [
+          "dynamodb:*"
+        ],
+        "Resource": "arn:aws:dynamodb:eu-central-1:183869895864:table/circles-users"
+    },
+    {
         "Sid": "allowAddSNSUser",
         "Effect": "Allow",
         "Action": "sns:CreatePlatformEndpoint",
@@ -145,3 +150,4 @@ resource "aws_iam_role_policy_attachment" "lambda_attach" {
   role       = "${aws_iam_role.lambda_exec.name}"
   policy_arn = "${aws_iam_policy.lambda_policies.arn}"
 }
+

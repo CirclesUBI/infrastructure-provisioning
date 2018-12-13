@@ -18,6 +18,10 @@ variable "vpc_id" {
   description = "The VPC id"
 }
 
+variable "igw_id" {
+  description = "The Internet Gateway id"
+}
+
 variable "environment" {
   description = "Environment setting"
 }
@@ -30,8 +34,9 @@ variable "instance_class" {
   description = "The type of instance to use"
 }
 
-variable "ecs_security_group" {
-  description = "The security group of the api ecs instance"
+variable "security_group_ids" {
+  type        = "list"
+  description = "The security groups to allow RDS access"
 }
 
 variable "availability_zones" {
@@ -43,3 +48,13 @@ variable "cidr_blocks" {
   type        = "list"
   description = "The CIDRs for the rds subnet"
 }
+
+variable "project_prefix" {
+  description = "Name prefix for resources."
+}
+
+variable "project" {
+  description = "Name of the project."
+  default     = "circles"
+}
+

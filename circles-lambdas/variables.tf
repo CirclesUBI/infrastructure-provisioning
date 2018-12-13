@@ -38,3 +38,8 @@ variable "circles_lambdas_oauth_token" {
 variable "lambda_function_name" {
   description = "Name of the lambda function to be deployed"
 }
+
+variable "circles_api_db_password" {
+  description = "Password for Circles API DB"
+}
+

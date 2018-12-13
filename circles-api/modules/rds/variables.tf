@@ -30,9 +30,9 @@ variable "instance_class" {
   description = "The type of instance to use"
 }
 
-variable "security_groups" {
+variable "security_group_ids" {
   type        = "list"
-  description = "The security group of the api ecs instance"
+  description = "The security groups to allow RDS access"
 }
 
 variable "availability_zones" {

@@ -78,7 +78,7 @@ module "rds" {
   database_name           = "${var.database_name}"
   database_user           = "${var.database_user}"
   database_password       = "${var.database_password}"
-  ecs_security_group      = "${module.ecs.security_group_id}"
+  security_group_ids      = ["${module.ecs.security_group_id}"]
   vpc_id                  = "${data.terraform_remote_state.circles_backend.vpc_id}"
   instance_class          = "db.t2.micro"
   rds_instance_identifier = "${var.rds_instance_identifier}"

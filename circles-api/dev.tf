@@ -79,11 +79,14 @@ module "rds" {
   database_user           = "${var.database_user}"
   database_password       = "${var.database_password}"
   security_group_ids      = ["${module.ecs.security_group_id}"]
+  igw_id                  = "${data.terraform_remote_state.circles_backend.igw_id}"
   vpc_id                  = "${data.terraform_remote_state.circles_backend.vpc_id}"
   instance_class          = "db.t2.micro"
   rds_instance_identifier = "${var.rds_instance_identifier}"
   availability_zones      = "${local.dev_availability_zones}"
-  cidr_blocks             = "${var.rds_private_cidrs}"
+  cidr_blocks             = "${var.rds_public_cidrs}"
+  project                 = "circles"
+  project_prefix          = "${var.project_prefix}"
 }
 
 module "ecs" {

@@ -4,20 +4,50 @@ resource "aws_subnet" "rds" {
   cidr_block = "${element(var.cidr_blocks, count.index)}"
   map_public_ip_on_launch = true
   availability_zone = "${element(var.availability_zones, count.index)}"
+
   tags {
-    Name = "rds-${element(var.availability_zones, count.index)}"
+    Project = "${var.project}"
+    Name = "${var.project_prefix}-rds-${element(var.availability_zones, count.index)}"
     Environment = "${var.environment}"
   }
 }
 
+resource "aws_route_table" "rds" {
+  vpc_id = "${var.vpc_id}"
+
+  tags {
+    Project     = "${var.project}"
+    Name        = "${var.project_prefix}-rds-route-table"
+    Environment = "${var.environment}"
+  }
+}
+
+resource "aws_route" "public_internet_gateway" {
+  route_table_id         = "${aws_route_table.rds.id}"
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = "${var.igw_id}"
+}
+
+resource "aws_route_table_association" "public" {
+  count          = "${length(var.cidr_blocks)}"
+  subnet_id      = "${element(aws_subnet.rds.*.id, count.index)}"
+  route_table_id = "${aws_route_table.rds.id}"
+}
+
 resource "aws_db_subnet_group" "default" {
-  name = "${var.rds_instance_identifier}-subnet-group"
+  name = "${var.project_prefix}-${var.rds_instance_identifier}-subnet-group"
   description = "RDS subnet group"
   subnet_ids = ["${aws_subnet.rds.*.id}"]
+
+  tags {
+    Project     = "${var.project}"
+    Name        = "${var.project_prefix}-rds-subnet-group"
+    Environment = "${var.environment}"
+  }
 }
 
 resource "aws_security_group" "rds" {
-  name = "rds_security_group"
+  name = "${var.project_prefix}-rds-sg"
   description = "RDS PostgreSQL"
   vpc_id = "${var.vpc_id}"
   # Keep the instance private by only allowing traffic from the web server.
@@ -25,7 +55,8 @@ resource "aws_security_group" "rds" {
     from_port = 5432
     to_port = 5432
     protocol = "tcp"
-    security_groups = ["${var.security_group_ids}"]
+    cidr_blocks = ["0.0.0.0/0"]
+    // security_groups = ["${var.security_group_ids}"]
   }
   # Allow all outbound traffic.
   egress {
@@ -34,28 +65,32 @@ resource "aws_security_group" "rds" {
     protocol = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   tags {
-    Name = "rds-security-group"
+    Project     = "${var.project}"
+    Name        = "${var.project_prefix}-rds-sg"
     Environment = "${var.environment}"
   }
 }
 
 resource "aws_db_instance" "default" {
+  name = "${var.database_name}"
   identifier = "${var.rds_instance_identifier}"
   allocated_storage = "${var.allocated_storage}"
   engine = "postgres"
-  engine_version = "9.6.6"
-  instance_class = "${var.instance_class}"
-  name = "${var.database_name}"
+  engine_version = "10.4"
+  instance_class = "${var.instance_class}"  
   username = "${var.database_user}"
   password = "${var.database_password}"
   db_subnet_group_name = "${aws_db_subnet_group.default.id}"
   vpc_security_group_ids = ["${aws_security_group.rds.id}"]
   skip_final_snapshot = true
   final_snapshot_identifier = "Ignore"
+  publicly_accessible = true
 
   tags {
-    Name = "circles-api-rds"
+    Project     = "${var.project}"
+    Name        = "${var.project_prefix}-rds"    
     Environment = "${var.environment}"
   }
 }

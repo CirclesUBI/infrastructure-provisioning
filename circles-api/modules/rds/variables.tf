@@ -18,6 +18,10 @@ variable "vpc_id" {
   description = "The VPC id"
 }
 
+variable "igw_id" {
+  description = "The Internet Gateway id"
+}
+
 variable "environment" {
   description = "Environment setting"
 }
@@ -44,3 +48,13 @@ variable "cidr_blocks" {
   type        = "list"
   description = "The CIDRs for the rds subnet"
 }
+
+variable "project_prefix" {
+  description = "Name prefix for resources."
+}
+
+variable "project" {
+  description = "Name of the project."
+  default     = "circles"
+}
+

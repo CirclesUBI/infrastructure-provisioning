@@ -49,7 +49,7 @@
       },
       {
         "name": "ANDROID_GCM_PLATFORM_ARN",
-        "value": "${var.android_platform_gcn_arn}"
+        "value": "${android_platform_gcn_arn}"
       }     
     ]
   }

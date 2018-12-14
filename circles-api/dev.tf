@@ -36,6 +36,17 @@ data "terraform_remote_state" "cognito" {
   }
 }
 
+data "terraform_remote_state" "circles_sns" {
+  backend = "s3"
+  config {
+    bucket         = "circles-sns-terraform"
+    region         = "eu-central-1"
+    key            = "circles-sns-terraform.tfstate"
+    dynamodb_table = "circles-sns-terraform"
+    encrypt        = true
+  }
+}
+
 /*====
 Variables used across all modules
 ======*/
@@ -72,21 +83,21 @@ module "networking" {
 }
 
 module "rds" {
-  source                  = "./modules/rds"
-  environment             = "dev"
-  allocated_storage       = "20"
-  database_name           = "${var.database_name}"
-  database_user           = "${var.database_user}"
-  database_password       = "${var.database_password}"
-  security_group_ids      = ["${module.ecs.security_group_id}"]
-  igw_id                  = "${data.terraform_remote_state.circles_backend.igw_id}"
-  vpc_id                  = "${data.terraform_remote_state.circles_backend.vpc_id}"
-  instance_class          = "db.t2.micro"
-  rds_instance_identifier = "${var.rds_instance_identifier}"
-  availability_zones      = "${local.dev_availability_zones}"
-  cidr_blocks             = "${var.rds_public_cidrs}"
-  project                 = "circles"
-  project_prefix          = "${var.project_prefix}"
+  source                    = "./modules/rds"
+  environment               = "dev"
+  allocated_storage         = "20"
+  database_name             = "${var.database_name}"
+  database_user             = "${var.database_user}"
+  database_password         = "${var.database_password}"
+  security_group_ids        = ["${module.ecs.security_group_id}"]
+  igw_id                    = "${data.terraform_remote_state.circles_backend.igw_id}"
+  vpc_id                    = "${data.terraform_remote_state.circles_backend.vpc_id}"
+  instance_class            = "db.t2.micro"
+  rds_instance_identifier   = "${var.rds_instance_identifier}"
+  availability_zones        = "${local.dev_availability_zones}"
+  cidr_blocks               = "${var.rds_public_cidrs}"
+  project                   = "circles"
+  project_prefix            = "${var.project_prefix}"  
 }
 
 module "ecs" {

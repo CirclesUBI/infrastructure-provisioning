@@ -43,6 +43,11 @@ variable "github_oauth_token" {
   description = "The OAuth token for the github repo to pull code from"
 }
 
+variable "github_branch" {
+  description = "The github branch to pull code from"
+}
+
+
 variable "database_name" {
   description = "Database name for the api"
 }
@@ -61,4 +66,8 @@ variable "database_host" {
 
 variable "database_port" {
   description = "Database port for the api"
+}
+
+variable "android_platform_gcn_arn" {
+  description = "AWS SNS android platform app"
 }

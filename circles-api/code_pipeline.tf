@@ -10,10 +10,12 @@ module "code_pipeline" {
   db_subnet_id                = "${module.rds.subnet_id}"
   run_task_security_group_ids = ["${module.networking.security_groups_ids}", "${module.ecs.security_group_id}"] #"${module.rds.db_access_sg_id}", 
   github_oauth_token          = "${var.circles_api_github_oauth_token}"
+  github_branch               = "user-api"
   image_name                  = "${var.project_prefix}-ecr",
   database_name               = "${var.database_name}"
   database_user               = "${var.database_user}"
   database_host               = "${var.database_host}"
   database_password           = "${var.database_password}"
   database_port               = "${var.database_port}" 
+  android_platform_gcn_arn    = "${data.terraform_remote_state.circles_sns.gcm_platform_arn}"
 }

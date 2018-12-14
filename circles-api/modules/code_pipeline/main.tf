@@ -130,6 +130,11 @@ resource "aws_codebuild_project" "test" {
       name  = "PGPORT"
       value = "${var.database_port}"
     }
+
+    environment_variable {
+      name = "ANDROID_GCM_PLATFORM_ARN"
+      value = "${var.android_platform_gcn_arn}"
+    }
   }
 
   source {
@@ -163,7 +168,7 @@ resource "aws_codepipeline" "pipeline" {
       configuration {
         Owner      = "CirclesUBI"
         Repo       = "circles-api"
-        Branch     = "master"
+        Branch     = "${var.github_branch}"
         OAuthToken = "${var.github_oauth_token}"
       }
     }

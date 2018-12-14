@@ -67,7 +67,3 @@ variable "database_host" {
 variable "database_port" {
   description = "Database port for the api"
 }
-
-variable "android_platform_gcn_arn" {
-  description = "AWS SNS android platform app"
-}

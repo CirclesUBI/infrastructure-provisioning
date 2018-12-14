@@ -33,16 +33,17 @@ data "template_file" "api_task" {
   template = "${file("${path.module}/tasks/api_task_definition.json")}"
 
   vars {
-    image             = "${aws_ecr_repository.circles_api.repository_url}"  
-    log_group_name    = "${aws_cloudwatch_log_group.circles_api.name}"
-    log_group_region  = "${var.region}"
-    cognito_pool_id   = "${var.cognito_pool_id}" 
-    region            = "${var.region}"
-    database_name     = "${var.database_name}"
-    database_user     = "${var.database_user}"
-    database_host     = "${var.database_host}"
-    database_password = "${var.database_password}"
-    database_port     = "${var.database_port}"   
+    image                     = "${aws_ecr_repository.circles_api.repository_url}"  
+    log_group_name            = "${aws_cloudwatch_log_group.circles_api.name}"
+    log_group_region          = "${var.region}"
+    cognito_pool_id           = "${var.cognito_pool_id}" 
+    region                    = "${var.region}"
+    database_name             = "${var.database_name}"
+    database_user             = "${var.database_user}"
+    database_host             = "${var.database_host}"
+    database_password         = "${var.database_password}"
+    database_port             = "${var.database_port}" 
+    android_platform_gcn_arn  = "${var.android_platform_gcn_arn}"  
   }
 }
 

@@ -46,7 +46,11 @@
       {
         "name": "PGPORT",
         "value": "${database_port}"
-      }      
+      },
+      {
+        "name": "ANDROID_GCM_PLATFORM_ARN",
+        "value": "${var.android_platform_gcn_arn}"
+      }     
     ]
   }
 ]

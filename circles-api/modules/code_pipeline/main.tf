@@ -130,11 +130,6 @@ resource "aws_codebuild_project" "test" {
       name  = "PGPORT"
       value = "${var.database_port}"
     }
-
-    environment_variable {
-      name = "ANDROID_GCM_PLATFORM_ARN"
-      value = "${var.android_platform_gcn_arn}"
-    }
   }
 
   source {

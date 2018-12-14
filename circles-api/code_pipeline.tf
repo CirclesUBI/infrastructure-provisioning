@@ -16,6 +16,5 @@ module "code_pipeline" {
   database_user               = "${var.database_user}"
   database_host               = "${var.database_host}"
   database_password           = "${var.database_password}"
-  database_port               = "${var.database_port}" 
-  android_platform_gcn_arn    = "${data.terraform_remote_state.circles_sns.gcm_platform_arn}"
+  database_port               = "${var.database_port}"   
 }

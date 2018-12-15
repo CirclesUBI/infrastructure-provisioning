@@ -9,7 +9,9 @@
         "ecr:GetDownloadUrlForLayer",
         "ecr:BatchGetImage",
         "logs:CreateLogStream",
-        "logs:PutLogEvents"
+        "logs:PutLogEvents",
+        "sns:CreatePlatformEndpoint",
+        "cognito-idp:AdminAddUserToGroup"
       ],
       "Resource": "*"
     }

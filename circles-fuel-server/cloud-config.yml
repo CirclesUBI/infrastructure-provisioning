@@ -1,0 +1,12 @@
+#cloud-config
+
+package_update: true
+
+users:
+  - default
+
+runcmd:  
+  - service docker start
+  - docker run -p 80:6000 --log-driver=awslogs --log-opt awslogs-region=${log_group_region} --log-opt awslogs-group=${log_group_name} circlesubi/fuel-server
+
+final_message: "The system is finally up, after $UPTIME seconds"

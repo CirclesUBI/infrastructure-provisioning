@@ -65,3 +65,7 @@ variable "database_port" {
 variable "android_platform_gcn_arn" {
   description = "AWS SNS android platform app"
 }
+
+variable "private_key" {
+  description = "The user's private key"
+}

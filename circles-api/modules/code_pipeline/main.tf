@@ -90,12 +90,6 @@ resource "aws_codebuild_project" "test" {
   service_role  = "${aws_iam_role.codebuild_role.arn}"
   # badge_enabled  = true // InvalidInputException: Build badges are not supported for CodePipeline source
 
-  vpc_config {
-    security_group_ids = ["${var.run_task_security_group_ids}"]
-    subnets = ["${var.run_task_subnet_id}", "${var.db_subnet_id}"]
-    vpc_id = "${var.vpc_id}"
-  }
-
   artifacts {
     type = "CODEPIPELINE"
   }
@@ -129,6 +123,11 @@ resource "aws_codebuild_project" "test" {
     environment_variable {
       name  = "PGPORT"
       value = "${var.database_port}"
+    }
+
+    environment_variable {
+      name  = "PRIVATE_KEY"
+      value = "${var.private_key}"
     }
   }
 

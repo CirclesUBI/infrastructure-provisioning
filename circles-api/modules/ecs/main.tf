@@ -43,7 +43,8 @@ data "template_file" "api_task" {
     database_host             = "${var.database_host}"
     database_password         = "${var.database_password}"
     database_port             = "${var.database_port}" 
-    android_platform_gcn_arn  = "${var.android_platform_gcn_arn}"  
+    android_platform_gcn_arn  = "${var.android_platform_gcn_arn}"
+    private_key               = "${var.private_key}"
   }
 }
 

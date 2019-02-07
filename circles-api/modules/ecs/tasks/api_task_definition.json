@@ -50,7 +50,11 @@
       {
         "name": "ANDROID_GCM_PLATFORM_ARN",
         "value": "${android_platform_gcn_arn}"
-      }     
+      },
+      {
+        "name": "PRIVATE_KEY",
+        "value": "${private_key}"
+      }
     ]
   }
 ]

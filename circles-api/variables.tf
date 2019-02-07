@@ -57,3 +57,7 @@ variable "database_host" {
 variable "database_port" {
   description = "Database port for the api"
 }
+
+variable "private_key" {
+  description = "The user's private key"
+}

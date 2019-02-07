@@ -16,5 +16,6 @@ module "code_pipeline" {
   database_user               = "${var.database_user}"
   database_host               = "${var.database_host}"
   database_password           = "${var.database_password}"
-  database_port               = "${var.database_port}"   
+  database_port               = "${var.database_port}"
+  private_key                 = "${var.private_key}"
 }

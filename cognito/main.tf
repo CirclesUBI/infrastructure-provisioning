@@ -14,17 +14,6 @@ provider "aws" {
   region     = "${var.region}"
 }
 
-data "terraform_remote_state" "circles_lambdas" {
-  backend = "s3"
-  config {
-    bucket         = "circles-lambdas-terraform"
-    region         = "eu-central-1"
-    key            = "circles-lambdas-terraform.tfstate"
-    dynamodb_table = "circles-lambdas-terraform"
-    encrypt        = true
-  }
-}
-
 
 resource "aws_cognito_user_pool" "users" {
   name = "circles-mobile-userpool"
@@ -39,10 +28,6 @@ resource "aws_cognito_user_pool" "users" {
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
   }
-
-  lambda_config {    
-    post_confirmation = "${data.terraform_remote_state.circles_lambdas.confirm_user_arn}"    
-  } 
 
   password_policy {
     minimum_length = "${var.password_policy_minimum_length}"
@@ -90,6 +75,42 @@ resource "aws_cognito_user_pool" "users" {
     attribute_data_type = "String"
     developer_only_attribute = false
     mutable = true
+    name = "device_id"
+    required = false
+    string_attribute_constraints {
+      max_length = 256
+      min_length = 1
+    }
+  }
+
+  schema {
+    attribute_data_type = "String"
+    developer_only_attribute = false
+    mutable = true
+    name = "agreedToDisclaimer"
+    required = false
+    string_attribute_constraints {
+      max_length = 5
+      min_length = 4
+    }
+  }
+
+    schema {
+    attribute_data_type = "String"
+    developer_only_attribute = false
+    mutable = true
+    name = "agreed_to_disclaimer"
+    required = false
+    string_attribute_constraints {
+      max_length = 5
+      min_length = 4
+    }
+  }
+
+  schema {
+    attribute_data_type = "String"
+    developer_only_attribute = false
+    mutable = true
     name = "phone_number"
     required = true
     string_attribute_constraints {
@@ -127,6 +148,109 @@ resource "aws_cognito_user_pool" "users" {
     Name        = "circles-mobile-userpool"
     Project     = "${var.project}"    
   }
+}
+
+resource "aws_cognito_user_pool_client" "circles-mobile" {
+  name                                 = "circles-mobile"
+  refresh_token_validity  = 30
+  user_pool_id = "${aws_cognito_user_pool.users.id}"
+
+  read_attributes = [
+    "given_name",
+    "email_verified",
+    "zoneinfo",
+    "website",
+    "preferred_username",
+    "name",
+    "locale",
+    "phone_number",
+    "family_name",
+    "custom:deviceId",
+    "birthdate",
+    "middle_name",
+    "phone_number_verified",
+    "profile",
+    "picture",
+    "address",
+    "gender",
+    "updated_at",
+    "nickname",
+    "email",
+  ]
+
+  write_attributes = [
+    "given_name",
+    "zoneinfo",
+    "website",
+    "preferred_username",
+    "name",
+    "locale",
+    "phone_number",
+    "family_name",
+    "custom:deviceId",
+    "birthdate",
+    "middle_name",
+    "profile",
+    "picture",
+    "address",
+    "gender",
+    "updated_at",
+    "nickname",
+    "email"
+  ]
+}
+
+resource "aws_cognito_user_pool_client" "circles-api" {
+  name                    = "circles-api"
+  explicit_auth_flows     = ["ADMIN_NO_SRP_AUTH"]
+  refresh_token_validity  = 30
+  user_pool_id = "${aws_cognito_user_pool.users.id}"
+
+  read_attributes = [
+    "given_name",
+    "email_verified",
+    "zoneinfo",
+    "website",
+    "preferred_username",
+    "name",
+    "locale",
+    "phone_number",
+    "family_name",
+    "custom:deviceId",
+    "birthdate",
+    "custom:agreedToDisclaimer",
+    "middle_name",
+    "phone_number_verified",
+    "profile",
+    "picture",
+    "address",
+    "gender",
+    "updated_at",
+    "nickname",
+    "email"
+  ]
+
+  write_attributes = [
+    "given_name",
+    "zoneinfo",
+    "website",
+    "preferred_username",
+    "name",
+    "locale",
+    "phone_number",
+    "family_name",
+    "custom:deviceId",
+    "birthdate",
+    "custom:agreedToDisclaimer",
+    "middle_name",
+    "profile",
+    "picture",
+    "address",
+    "gender",
+    "updated_at",
+    "nickname",
+    "email"
+  ]
 }
 
 resource "aws_iam_role" "cidp_sms" {
@@ -222,10 +346,18 @@ resource "aws_cognito_user_pool_client" "circles_mobile" {
   ]
 }
 
-resource "aws_cognito_user_group" "basic_users" {
-  name         = "circles-basic-user-group"
+resource "aws_cognito_user_group" "user" {
+  name         = "user"
+  description  = "A default user of circles"
+  precedence   = 0
+  # role_arn     =
   user_pool_id = "${aws_cognito_user_pool.users.id}"
-  description  = "Regular user group"
-  // precedence   = 10
-  // role_arn     = "${aws_iam_role.group_role.arn}"
+}
+
+resource "aws_cognito_user_group" "test" {
+  name         = "test"
+  description  = "test user for integration and development"  
+  precedence   = 1
+  # role_arn     =
+  user_pool_id = "${aws_cognito_user_pool.users.id}"
 }

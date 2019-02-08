@@ -11,6 +11,7 @@ phases:
       - echo Build started on `date`
       - echo Starting migrations ...
       - npm run migrate:up
+      - npm run test
   post_build:
     commands:
       - echo Build completed on `date`

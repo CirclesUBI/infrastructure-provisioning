@@ -71,3 +71,11 @@ variable "database_port" {
 variable "private_key" {
   description = "The user's private key"
 }
+
+variable "cognito_pool_id" {
+  description = "Cognito pool id"
+}
+
+variable "cognito_client_id" {
+  description = "Cognito client id"
+}

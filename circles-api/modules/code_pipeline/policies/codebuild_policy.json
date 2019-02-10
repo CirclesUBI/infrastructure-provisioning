@@ -17,7 +17,13 @@
         "ecr:BatchCheckLayerAvailability",
         "ecr:PutImage",
         "ecs:RunTask",
-        "iam:PassRole"
+        "iam:PassRole",
+        "cognito-idp:AdminInitiateAuth",
+        "cognito-idp:AdminGetUser",
+        "cognito-idp:AdminCreateUser",
+        "cognito-idp:AdminRespondToAuthChallenge",
+        "cognito-idp:AdminAddUserToGroup",
+        "sns:CreatePlatformEndpoint"        
       ]
     },
     {

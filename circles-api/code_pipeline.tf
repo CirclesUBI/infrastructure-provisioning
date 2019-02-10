@@ -19,4 +19,8 @@ module "code_pipeline" {
   database_port               = "${var.database_port}"
   private_key                 = "${var.private_key}"
   cognito_pool_id             = "${data.terraform_remote_state.cognito.cognito_userpool_id}"
+  cognito_client_id           = "${data.terraform_remote_state.cognito.cognito_api_app_id}"
+  cognito_pool_jwt_kid        = "${var.cognito_pool_jwt_kid}"
+  cognito_pool_jwt_n          = "${var.cognito_pool_jwt_n}"
+  android_platform_gcm_arn    = "${data.terraform_remote_state.circles_sns.gcm_platform_arn}"
 }

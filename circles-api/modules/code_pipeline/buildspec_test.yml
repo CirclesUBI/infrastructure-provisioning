@@ -3,6 +3,8 @@ version: 0.2
 phases:
   pre_build:
     commands:       
+      - API_VERSION="v$( node -p "require('./package.json').version" )"
+      - export API_VERSION
       - echo Installing node packages ...      
       - npm install
       - echo Entered the pre_build phase...
@@ -11,7 +13,7 @@ phases:
       - echo Build started on `date`
       - echo Starting migrations ...
       - npm run migrate:up
-      - npm run test
+      - npm test
   post_build:
     commands:
       - echo Build completed on `date`

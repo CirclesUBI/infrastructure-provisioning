@@ -129,6 +129,36 @@ resource "aws_codebuild_project" "test" {
       name  = "PRIVATE_KEY"
       value = "${var.private_key}"
     }
+
+    environment_variable {
+      name  = "COGNITO_POOL_ID"
+      value = "${var.cognito_pool_id}"
+    }
+
+    environment_variable {
+      name  = "COGNITO_CLIENT_ID"
+      value = "${var.cognito_client_id}"
+    }
+
+    environment_variable {
+      name  = "COGNITO_POOL_JWT_KID"
+      value = "${var.cognito_pool_jwt_kid}"
+    }
+
+    environment_variable {
+      name  = "COGNITO_POOL_JWT_N"
+      value = "${var.cognito_pool_jwt_n}"
+    }
+    
+    environment_variable {
+      name  = "ANDROID_GCM_PLATFORM_ARN"
+      value = "${var.android_platform_gcm_arn}"
+    }
+
+    environment_variable {
+      name  = "COGNITO_POOL_REGION"
+      value = "${var.region}"
+    }    
   }
 
   source {

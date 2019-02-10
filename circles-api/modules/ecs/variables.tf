@@ -62,7 +62,7 @@ variable "database_port" {
   description = "Database port for the api"
 }
 
-variable "android_platform_gcn_arn" {
+variable "android_platform_gcm_arn" {
   description = "AWS SNS android platform app"
 }
 

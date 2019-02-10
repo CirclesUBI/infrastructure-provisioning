@@ -90,12 +90,6 @@ resource "aws_codebuild_project" "test" {
   service_role  = "${aws_iam_role.codebuild_role.arn}"
   # badge_enabled  = true // InvalidInputException: Build badges are not supported for CodePipeline source
 
-  vpc_config {
-    security_group_ids = ["${var.run_task_security_group_ids}"]
-    subnets = ["${var.run_task_subnet_id}", "${var.db_subnet_id}"]
-    vpc_id = "${var.vpc_id}"
-  }
-
   artifacts {
     type = "CODEPIPELINE"
   }
@@ -130,6 +124,41 @@ resource "aws_codebuild_project" "test" {
       name  = "PGPORT"
       value = "${var.database_port}"
     }
+
+    environment_variable {
+      name  = "PRIVATE_KEY"
+      value = "${var.private_key}"
+    }
+
+    environment_variable {
+      name  = "COGNITO_POOL_ID"
+      value = "${var.cognito_pool_id}"
+    }
+
+    environment_variable {
+      name  = "COGNITO_CLIENT_ID"
+      value = "${var.cognito_client_id}"
+    }
+
+    environment_variable {
+      name  = "COGNITO_POOL_JWT_KID"
+      value = "${var.cognito_pool_jwt_kid}"
+    }
+
+    environment_variable {
+      name  = "COGNITO_POOL_JWT_N"
+      value = "${var.cognito_pool_jwt_n}"
+    }
+    
+    environment_variable {
+      name  = "ANDROID_GCM_PLATFORM_ARN"
+      value = "${var.android_platform_gcm_arn}"
+    }
+
+    environment_variable {
+      name  = "COGNITO_POOL_REGION"
+      value = "${var.region}"
+    }    
   }
 
   source {

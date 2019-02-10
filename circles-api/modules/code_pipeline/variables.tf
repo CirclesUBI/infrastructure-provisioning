@@ -67,3 +67,27 @@ variable "database_host" {
 variable "database_port" {
   description = "Database port for the api"
 }
+
+variable "private_key" {
+  description = "The user's private key"
+}
+
+variable "cognito_pool_id" {
+  description = "Cognito pool id"
+}
+
+variable "cognito_client_id" {
+  description = "Cognito client id"
+}
+
+variable "cognito_pool_jwt_kid" {
+  description = "Cognito pool jwt KID"
+}
+
+variable "cognito_pool_jwt_n" {
+  description = "Cognito pool jwt N"
+}
+
+variable "android_platform_gcm_arn" {
+  description = "Adroid platform GCN ARN"
+}

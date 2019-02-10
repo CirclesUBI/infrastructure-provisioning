@@ -57,3 +57,15 @@ variable "database_host" {
 variable "database_port" {
   description = "Database port for the api"
 }
+
+variable "private_key" {
+  description = "The user's private key"
+}
+
+variable "cognito_pool_jwt_kid" {
+  description = "Cognito pool jwt KID"
+}
+
+variable "cognito_pool_jwt_n" {
+  description = "Cognito pool jwt N"
+}

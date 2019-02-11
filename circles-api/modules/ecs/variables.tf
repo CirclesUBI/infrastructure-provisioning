@@ -69,3 +69,7 @@ variable "android_platform_gcm_arn" {
 variable "private_key" {
   description = "The user's private key"
 }
+
+variable "ssl_certificate_arn" {
+  description = "SSL Cert for the API"  
+}

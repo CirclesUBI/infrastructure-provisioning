@@ -139,12 +139,12 @@ resource "aws_alb_target_group" "circles_api" {
 /* security group for ALB */
 resource "aws_security_group" "api_inbound_sg" {
   name        = "${var.project_prefix}-inbound-sg"
-  description = "Allow HTTP from Anywhere into ALB"
+  description = "Allow HTTPS from Anywhere into ALB"
   vpc_id      = "${var.vpc_id}"
 
   ingress {
-    from_port   = 8080
-    to_port     = 8080
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -180,11 +180,35 @@ resource "aws_alb" "circles_api" {
   }
 }
 
-resource "aws_alb_listener" "circles_api" {
+resource "aws_alb_listener" "circles_api_http" {
   load_balancer_arn = "${aws_alb.circles_api.arn}"
-  port              = "8080"
+  port              = "80"
   protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+  # default_action {
+  #   target_group_arn = "${aws_alb_target_group.circles_api.arn}"
+  #   type             = "forward"
+  # }
+}
+
+
+resource "aws_alb_listener" "circles_api_https" {
+  load_balancer_arn = "${aws_alb.circles_api.arn}"
+  port              = "443"
+  protocol          = "HTTPS"
   depends_on        = ["aws_alb_target_group.circles_api"]
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${var.ssl_certificate_arn}"
 
   default_action {
     target_group_arn = "${aws_alb_target_group.circles_api.arn}"
@@ -258,13 +282,6 @@ resource "aws_security_group" "api_ecs_service" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 8
-    to_port     = 0
-    protocol    = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 

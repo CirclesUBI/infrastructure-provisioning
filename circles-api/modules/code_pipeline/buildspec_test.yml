@@ -2,17 +2,25 @@ version: 0.2
 
 phases:
   pre_build:
-    commands:       
+    commands:     
+      - echo Entered the pre_build phase...  
       - API_VERSION="v$( node -p "require('./package.json').version" )"
       - export API_VERSION
       - echo Installing node packages ...      
       - npm install
-      - echo Entered the pre_build phase...
+      - echo Installing and compiling contracts ...
+      - mkdir contracts
+      - cd contracts
+      - git clone https://github.com/CirclesUBI/circles-contracts.git .
+      - npm install
+      - npx truffle compile
+      - cd ..
   build:
     commands:
       - echo Build started on `date`
       - echo Starting migrations ...
       - npm run migrate:up
+      - echo Starting tests ...
       - npm test
   post_build:
     commands:

@@ -97,7 +97,7 @@ resource "aws_codebuild_project" "test" {
   environment {
     compute_type    = "BUILD_GENERAL1_SMALL"
     // https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html
-    image           = "aws/codebuild/nodejs:10.15.0"
+    image           = "aws/codebuild/nodejs:10.1.0"
     type            = "LINUX_CONTAINER"
 
     environment_variable {
@@ -158,7 +158,17 @@ resource "aws_codebuild_project" "test" {
     environment_variable {
       name  = "COGNITO_POOL_REGION"
       value = "${var.region}"
-    }    
+    }
+
+    environment_variable {
+      name  = "COGNITO_TEST_USERNAME"
+      value = "${var.cognito_test_username}"
+    }
+
+    environment_variable {
+      name  = "COGNITO_TEST_PASSWORD"
+      value = "${var.cognito_test_password}"
+    }
   }
 
   source {

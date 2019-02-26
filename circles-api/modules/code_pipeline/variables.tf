@@ -91,3 +91,11 @@ variable "cognito_pool_jwt_n" {
 variable "android_platform_gcm_arn" {
   description = "Adroid platform GCN ARN"
 }
+
+variable "cognito_test_username" {
+  description = "Admin cognito username for API Tests"
+}
+
+variable "cognito_test_password" {
+  description = "Admin cognito user password for API Tests"
+}

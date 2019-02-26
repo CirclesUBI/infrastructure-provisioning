@@ -23,6 +23,7 @@
         "cognito-idp:AdminCreateUser",
         "cognito-idp:AdminRespondToAuthChallenge",
         "cognito-idp:AdminAddUserToGroup",
+        "cognito-idp:AdminDeleteUser",
         "sns:CreatePlatformEndpoint"        
       ]
     },

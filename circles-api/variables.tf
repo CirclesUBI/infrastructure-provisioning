@@ -50,14 +50,6 @@ variable "database_user" {
   description = "The admin username of the database"
 }
 
-variable "database_host" {
-  description = "Database host for the api"
-}
-
-variable "database_port" {
-  description = "Database port for the api"
-}
-
 variable "private_key" {
   description = "The user's private key"
 }
@@ -68,4 +60,12 @@ variable "cognito_pool_jwt_kid" {
 
 variable "cognito_pool_jwt_n" {
   description = "Cognito pool jwt N"
+}
+
+variable "cognito_test_username" {
+  description = "Admin cognito username for API Tests"
+}
+
+variable "cognito_test_password" {
+  description = "Admin cognito user password for API Tests"
 }

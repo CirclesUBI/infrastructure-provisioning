@@ -47,6 +47,51 @@ data "terraform_remote_state" "circles_sns" {
   }
 }
 
+resource "aws_route53_zone" "joincircles" {
+  name = "joincircles.net."
+}
+
+resource "aws_acm_certificate" "cert" {
+  domain_name       = "api.joincircles.net"
+  validation_method = "DNS"
+}
+
+resource "aws_route53_record" "cert_validation_dns_record" {
+  # name = "_116690e4e4055e78cf9f18164a99bb4f.api.joincircles.net"
+  # type    = "CNAME"
+  # ttl = "60"
+  # zone_id           = "Z1H1OJRKIZ7DT2"
+  # allow_overwrite = true
+
+  name = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
+  type = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
+  zone_id = "${aws_route53_zone.joincircles.id}"
+  records = ["${aws_acm_certificate.cert.domain_validation_options.0.resource_record_value}"]
+  ttl = 60
+}
+
+resource "aws_acm_certificate_validation" "cert_validation" {
+  certificate_arn = "${aws_acm_certificate.cert.arn}"
+  validation_record_fqdns = ["${aws_route53_record.cert_validation_dns_record.fqdn}"]
+}
+
+
+
+# id                = Z1H1OJRKIZ7DT2__116690e4e4055e78cf9f18164a99bb4f.api.joincircles.net._CNAME
+# allow_overwrite   = true
+# fqdn              = _116690e4e4055e78cf9f18164a99bb4f.api.joincircles.net
+# health_check_id   =
+
+# records.#         = 1
+# records.459540408 = _370b295ac76732fa2a332bd977b56208.tljzshvwok.acm-validations.aws.
+
+
+
+
+#                     = arn:aws:acm:eu-central-1:183869895864:certificate/50a39992-4866-4f90-84ee-2e39cf4d7513
+# validation_record_fqdns.#          = 1
+# validation_record_fqdns.1360131667 = _116690e4e4055e78cf9f18164a99bb4f.api.joincircles.net.
+
 /*====
 Variables used across all modules
 ======*/

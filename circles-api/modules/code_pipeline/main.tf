@@ -97,7 +97,7 @@ resource "aws_codebuild_project" "test" {
   environment {
     compute_type    = "BUILD_GENERAL1_SMALL"
     // https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html
-    image           = "aws/codebuild/nodejs:10.1.0"
+    image           = "aws/codebuild/nodejs:10.15.0"
     type            = "LINUX_CONTAINER"
 
     environment_variable {
@@ -136,7 +136,7 @@ resource "aws_codebuild_project" "test" {
     }
 
     environment_variable {
-      name  = "COGNITO_CLIENT_ID"
+      name  = "COGNITO_CLIENT_ID_API"
       value = "${var.cognito_client_id}"
     }
 

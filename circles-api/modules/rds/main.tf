@@ -78,7 +78,7 @@ resource "aws_db_instance" "default" {
   identifier = "${var.rds_instance_identifier}"
   allocated_storage = "${var.allocated_storage}"
   engine = "postgres"
-  engine_version = "10.4"
+  engine_version = "10.6"
   instance_class = "${var.instance_class}"  
   username = "${var.database_user}"
   password = "${var.database_password}"

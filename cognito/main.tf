@@ -16,14 +16,13 @@ provider "aws" {
 
 
 resource "aws_cognito_user_pool" "users" {
-  name = "circles-mobile-userpool"
+  name = "circles-userpool"
   email_verification_subject = "Your Circles verification code"
   email_verification_message = "Your Circles verification code is {####}. "
   sms_authentication_message = "Your Circles authentication code is {####}. "  
   sms_verification_message = "Your Circles verification code is {####}. "
-  username_attributes = ["phone_number"]
-  auto_verified_attributes = ["email"]
   mfa_configuration = "OPTIONAL"
+  auto_verified_attributes = ["phone_number"]
 
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
@@ -43,7 +42,7 @@ resource "aws_cognito_user_pool" "users" {
   }
   
   device_configuration {
-    challenge_required_on_new_device = false
+    challenge_required_on_new_device = true
     device_only_remembered_on_user_prompt = false
   }
 
@@ -56,18 +55,6 @@ resource "aws_cognito_user_pool" "users" {
     string_attribute_constraints {
       max_length = 2048
       min_length = 0
-    }
-  }
-  
-  schema {
-    attribute_data_type = "String"
-    developer_only_attribute = false
-    mutable = true
-    name = "deviceId"
-    required = false
-    string_attribute_constraints {
-      max_length = 256
-      min_length = 1
     }
   }
 
@@ -84,18 +71,6 @@ resource "aws_cognito_user_pool" "users" {
   }
 
   schema {
-    attribute_data_type = "String"
-    developer_only_attribute = false
-    mutable = true
-    name = "agreedToDisclaimer"
-    required = false
-    string_attribute_constraints {
-      max_length = 5
-      min_length = 4
-    }
-  }
-
-    schema {
     attribute_data_type = "String"
     developer_only_attribute = false
     mutable = true
@@ -123,18 +98,6 @@ resource "aws_cognito_user_pool" "users" {
     attribute_data_type = "String"
     developer_only_attribute = false
     mutable = true
-    name = "name"
-    required = true
-    string_attribute_constraints {
-      max_length = 64
-      min_length = 2
-    }
-  }
-
-  schema {
-    attribute_data_type = "String"
-    developer_only_attribute = false
-    mutable = true
     name = "email"
     required = true
     string_attribute_constraints {
@@ -145,7 +108,7 @@ resource "aws_cognito_user_pool" "users" {
 
   tags {    
     Environment = "${var.environment}"
-    Name        = "circles-mobile-userpool"
+    Name        = "circles-userpool"
     Project     = "${var.project}"    
   }
 }
@@ -159,43 +122,26 @@ resource "aws_cognito_user_pool_client" "circles-mobile" {
     "given_name",
     "email_verified",
     "zoneinfo",
-    "website",
-    "preferred_username",
-    "name",
     "locale",
     "phone_number",
     "family_name",
-    "custom:deviceId",
-    "birthdate",
-    "middle_name",
+    "custom:device_id",
+    "custom:agreed_to_disclaimer",
     "phone_number_verified",
-    "profile",
     "picture",
-    "address",
-    "gender",
     "updated_at",
-    "nickname",
-    "email",
+    "email"
   ]
 
   write_attributes = [
     "given_name",
     "zoneinfo",
-    "website",
-    "preferred_username",
-    "name",
     "locale",
     "phone_number",
     "family_name",
-    "custom:deviceId",
-    "birthdate",
-    "middle_name",
-    "profile",
+    "custom:device_id",
+    "custom:agreed_to_disclaimer",
     "picture",
-    "address",
-    "gender",
-    "updated_at",
-    "nickname",
     "email"
   ]
 }
@@ -210,45 +156,26 @@ resource "aws_cognito_user_pool_client" "circles-api" {
     "given_name",
     "email_verified",
     "zoneinfo",
-    "website",
-    "preferred_username",
-    "name",
     "locale",
     "phone_number",
     "family_name",
-    "custom:deviceId",
-    "birthdate",
-    "custom:agreedToDisclaimer",
-    "middle_name",
+    "custom:device_id",
+    "custom:agreed_to_disclaimer",
     "phone_number_verified",
-    "profile",
     "picture",
-    "address",
-    "gender",
     "updated_at",
-    "nickname",
     "email"
   ]
 
   write_attributes = [
     "given_name",
     "zoneinfo",
-    "website",
-    "preferred_username",
-    "name",
     "locale",
     "phone_number",
     "family_name",
-    "custom:deviceId",
-    "birthdate",
-    "custom:agreedToDisclaimer",
-    "middle_name",
-    "profile",
+    "custom:device_id",
+    "custom:agreed_to_disclaimer",
     "picture",
-    "address",
-    "gender",
-    "updated_at",
-    "nickname",
     "email"
   ]
 }
@@ -296,55 +223,6 @@ resource "aws_iam_role_policy" "cidp_sms" {
 EOF
 }
 
-resource "aws_cognito_user_pool_client" "circles_mobile" {  
-  name = "circles-mobile"
-  user_pool_id = "${aws_cognito_user_pool.users.id}"
-  refresh_token_validity = 30
-
-  read_attributes = [
-    "given_name",                  
-    "email_verified",
-    "zoneinfo",
-    "website",
-    "preferred_username",
-    "name",
-    "locale",
-    "phone_number",
-    "family_name",
-    "custom:deviceId",
-    "birthdate",
-    "middle_name",
-    "phone_number_verified",
-    "profile",
-    "picture",
-    "address",
-    "gender",
-    "updated_at",
-    "nickname",
-    "email"
-  ]
-
-  write_attributes = [
-    "given_name",
-    "zoneinfo",
-    "website",
-    "preferred_username",
-    "name",
-    "locale",
-    "phone_number",
-    "family_name",
-    "custom:deviceId",
-    "birthdate",
-    "middle_name",
-    "profile",
-    "picture",
-    "address",
-    "gender",
-    "updated_at",
-    "nickname",
-    "email"
-  ]
-}
 
 resource "aws_cognito_user_group" "user" {
   name         = "user"
@@ -356,7 +234,15 @@ resource "aws_cognito_user_group" "user" {
 
 resource "aws_cognito_user_group" "test" {
   name         = "test"
-  description  = "test user for integration and development"  
+  description  = "Test user for integration and development"  
+  precedence   = 1
+  # role_arn     =
+  user_pool_id = "${aws_cognito_user_pool.users.id}"
+}
+
+resource "aws_cognito_user_group" "admin" {
+  name         = "admin"
+  description  = "Admin user of circles"  
   precedence   = 1
   # role_arn     =
   user_pool_id = "${aws_cognito_user_pool.users.id}"

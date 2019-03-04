@@ -32,6 +32,14 @@
         "value": "${database_user}"
       },
       {
+        "name": "COGNITO_POOL_JWT_KID",
+        "value": "${cognito_pool_jwt_kid}"
+      },
+      {
+        "name": "COGNITO_POOL_JWT_N",
+        "value": "${cognito_pool_jwt_n}"
+      },
+      {
         "name": "PGHOST",
         "value": "${database_host}"
       },
@@ -54,6 +62,10 @@
       {
         "name": "PRIVATE_KEY",
         "value": "${private_key}"
+      },
+      {
+        "name": "NETWORK_ID",
+        "value": "5777"
       }
     ]
   }

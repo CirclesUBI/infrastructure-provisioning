@@ -73,3 +73,11 @@ variable "private_key" {
 variable "ssl_certificate_arn" {
   description = "SSL Cert for the API"  
 }
+
+variable "cognito_pool_jwt_kid" {
+  description = "Cognito pool jwt KID"
+}
+
+variable "cognito_pool_jwt_n" {
+  description = "Cognito pool jwt N"
+}

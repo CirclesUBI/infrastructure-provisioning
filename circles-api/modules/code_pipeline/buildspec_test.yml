@@ -2,7 +2,7 @@ version: 0.2
 
 phases:
   pre_build:
-    commands:     
+    commands:
       - echo Entered the pre_build phase...  
       - API_VERSION="v$( node -p "require('./package.json').version" )"
       - export API_VERSION

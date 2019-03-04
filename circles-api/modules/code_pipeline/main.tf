@@ -86,7 +86,7 @@ resource "aws_codebuild_project" "build" {
 
 resource "aws_codebuild_project" "test" {
   name          = "${var.project_prefix}-test"
-  build_timeout = "10"
+  build_timeout = "15"
   service_role  = "${aws_iam_role.codebuild_role.arn}"
   # badge_enabled  = true // InvalidInputException: Build badges are not supported for CodePipeline source
 
@@ -125,10 +125,10 @@ resource "aws_codebuild_project" "test" {
       value = "${var.database_port}"
     }
 
-    environment_variable {
-      name  = "PRIVATE_KEY"
-      value = "${var.private_key}"
-    }
+    # environment_variable {
+    #   name  = "PRIVATE_KEY"
+    #   value = "${var.private_key}"
+    # }
 
     environment_variable {
       name  = "COGNITO_POOL_ID"
@@ -168,6 +168,16 @@ resource "aws_codebuild_project" "test" {
     environment_variable {
       name  = "COGNITO_TEST_PASSWORD"
       value = "${var.cognito_test_password}"
+    }
+
+    environment_variable {
+      name  = "NETWORK_ID"
+      value = 5777
+    }
+
+    environment_variable {
+      name  = "PRIVATE_KEY"
+      value = "0x70c630c25edeb9205ff0a15f281cfa496ed4b32fedb5cd8ff532ebd80be925a3"
     }
   }
 

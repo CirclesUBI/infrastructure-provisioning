@@ -14,7 +14,7 @@ provider "aws" {
   region     = "${var.region}"
 }
 
-
+  
 resource "aws_cognito_user_pool" "users" {
   name = "circles-userpool"
   email_verification_subject = "Your Circles verification code"
@@ -22,6 +22,7 @@ resource "aws_cognito_user_pool" "users" {
   sms_authentication_message = "Your Circles authentication code is {####}. "  
   sms_verification_message = "Your Circles verification code is {####}. "
   mfa_configuration = "OPTIONAL"
+  alias_attributes = ["phone_number"]
   auto_verified_attributes = ["phone_number"]
 
   verification_message_template {
@@ -119,12 +120,11 @@ resource "aws_cognito_user_pool_client" "circles-mobile" {
   user_pool_id = "${aws_cognito_user_pool.users.id}"
 
   read_attributes = [
-    "given_name",
+    "name",
     "email_verified",
     "zoneinfo",
     "locale",
     "phone_number",
-    "family_name",
     "custom:device_id",
     "custom:agreed_to_disclaimer",
     "phone_number_verified",
@@ -134,11 +134,10 @@ resource "aws_cognito_user_pool_client" "circles-mobile" {
   ]
 
   write_attributes = [
-    "given_name",
+    "name",
     "zoneinfo",
     "locale",
     "phone_number",
-    "family_name",
     "custom:device_id",
     "custom:agreed_to_disclaimer",
     "picture",
@@ -153,12 +152,11 @@ resource "aws_cognito_user_pool_client" "circles-api" {
   user_pool_id = "${aws_cognito_user_pool.users.id}"
 
   read_attributes = [
-    "given_name",
+    "name",
     "email_verified",
     "zoneinfo",
     "locale",
     "phone_number",
-    "family_name",
     "custom:device_id",
     "custom:agreed_to_disclaimer",
     "phone_number_verified",
@@ -168,11 +166,10 @@ resource "aws_cognito_user_pool_client" "circles-api" {
   ]
 
   write_attributes = [
-    "given_name",
+    "name",
     "zoneinfo",
     "locale",
-    "phone_number",
-    "family_name",
+    "phone_number",    
     "custom:device_id",
     "custom:agreed_to_disclaimer",
     "picture",

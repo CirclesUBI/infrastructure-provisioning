@@ -86,7 +86,7 @@ resource "aws_codebuild_project" "build" {
 
 resource "aws_codebuild_project" "test" {
   name          = "${var.project_prefix}-test"
-  build_timeout = "10"
+  build_timeout = "15"
   service_role  = "${aws_iam_role.codebuild_role.arn}"
   # badge_enabled  = true // InvalidInputException: Build badges are not supported for CodePipeline source
 
@@ -168,6 +168,11 @@ resource "aws_codebuild_project" "test" {
     environment_variable {
       name  = "COGNITO_TEST_PASSWORD"
       value = "${var.cognito_test_password}"
+    }
+
+    environment_variable {
+      name  = "NETWORK_ID"
+      value = 5777
     }
   }
 

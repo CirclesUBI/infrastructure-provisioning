@@ -163,6 +163,8 @@ module "ecs" {
   database_port               = "${module.rds.db_port}"
   database_password           = "${var.database_password}"  
   android_platform_gcm_arn    = "${data.terraform_remote_state.circles_sns.gcm_platform_arn}"
+  cognito_pool_jwt_kid        = "${var.cognito_pool_jwt_kid}"
+  cognito_pool_jwt_n          = "${var.cognito_pool_jwt_n}"
   private_key         = "${var.private_key}" 
   ssl_certificate_arn = "${aws_acm_certificate.cert.arn}"
 }

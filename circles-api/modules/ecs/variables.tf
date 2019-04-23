@@ -62,6 +62,14 @@ variable "database_port" {
   description = "Database port for the api"
 }
 
+variable "cognito_pool_jwt_kid" {
+  description = "Cognito pool jwt KID"
+}
+
+variable "cognito_pool_jwt_n" {
+  description = "Cognito pool jwt N"
+}
+
 variable "android_platform_gcm_arn" {
   description = "AWS SNS android platform app"
 }

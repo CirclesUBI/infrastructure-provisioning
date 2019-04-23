@@ -44,6 +44,8 @@ data "template_file" "api_task" {
     database_password         = "${var.database_password}"
     database_port             = "${var.database_port}" 
     android_platform_gcm_arn  = "${var.android_platform_gcm_arn}"
+    cognito_pool_jwt_kid      = "${var.cognito_pool_jwt_kid}"
+    cognito_pool_jwt_n        = "${var.cognito_pool_jwt_n}"
     private_key               = "${var.private_key}"
   }
 }

@@ -11,14 +11,18 @@ phases:
       - echo Installing and compiling contracts ...
       - mkdir contracts
       - cd contracts
+      - npm install -g ganache-cli
+      - nohup ganache-cli -i 5777 &
       - git clone https://github.com/CirclesUBI/circles-contracts.git .
       - npm install
+      - npm install websocket
       - npx truffle compile
+      - npx truffle migrate
       - cd ..
   build:
     commands:
       - echo Build started on `date`
-      - echo Starting migrations ...
+      - echo Starting migrations ...    
       - npm run migrate:up
       - echo Starting tests ...
       - npm test

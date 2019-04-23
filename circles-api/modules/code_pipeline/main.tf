@@ -48,6 +48,10 @@ resource "aws_iam_role_policy" "codebuild_policy" {
 
 data "template_file" "buildspec_test" {
   template = "${file("${path.module}/buildspec_test.yml")}"
+
+  vars {
+    blockchain_network_id = "${var.blockchain_network_id}"
+  }
 }
 
 data "template_file" "buildspec_build" {
@@ -172,7 +176,7 @@ resource "aws_codebuild_project" "test" {
 
     environment_variable {
       name  = "NETWORK_ID"
-      value = 5777
+      value = "${var.blockchain_network_id}"
     }
   }
 

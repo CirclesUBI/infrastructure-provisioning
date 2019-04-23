@@ -167,4 +167,5 @@ module "ecs" {
   cognito_pool_jwt_n          = "${var.cognito_pool_jwt_n}"
   private_key         = "${var.private_key}" 
   ssl_certificate_arn = "${aws_acm_certificate.cert.arn}"
+  blockchain_network_id = "${var.blockchain_network_id}"
 }

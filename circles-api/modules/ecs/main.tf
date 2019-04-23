@@ -47,6 +47,7 @@ data "template_file" "api_task" {
     cognito_pool_jwt_kid      = "${var.cognito_pool_jwt_kid}"
     cognito_pool_jwt_n        = "${var.cognito_pool_jwt_n}"
     private_key               = "${var.private_key}"
+    blockchain_network_id     = "${var.blockchain_network_id}"
   }
 }
 

@@ -81,3 +81,7 @@ variable "private_key" {
 variable "ssl_certificate_arn" {
   description = "SSL Cert for the API"  
 }
+
+variable "blockchain_network_id" {
+  description = "Port number of blockchain network interface"
+}

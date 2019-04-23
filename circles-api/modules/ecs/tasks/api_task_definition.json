@@ -57,7 +57,7 @@
       },
       {
         "name": "NETWORK_ID",
-        "value": "10999"
+        "value": "${blockchain_network_id}"
       },
       {
         "name" : "COGNITO_POOL_JWT_KID",

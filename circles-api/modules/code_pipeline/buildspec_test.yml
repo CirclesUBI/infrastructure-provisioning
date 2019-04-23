@@ -12,7 +12,7 @@ phases:
       - mkdir contracts
       - cd contracts
       - npm install -g ganache-cli
-      - nohup ganache-cli -i 5777 &
+      - nohup ganache-cli -i ${blockchain_network_id} &
       - git clone https://github.com/CirclesUBI/circles-contracts.git .
       - npm install
       - npm install websocket

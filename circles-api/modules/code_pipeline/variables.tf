@@ -99,3 +99,7 @@ variable "cognito_test_username" {
 variable "cognito_test_password" {
   description = "Admin cognito user password for API Tests"
 }
+
+variable "blockchain_network_id" {
+  description = "Port number of blockchain network interface"
+}

@@ -30,4 +30,5 @@ module "code_pipeline" {
   cognito_test_username       = "${var.cognito_test_username}"
   cognito_test_password       = "${var.cognito_test_password}"
   android_platform_gcm_arn    = "${data.terraform_remote_state.circles_sns.gcm_platform_arn}"
+  blockchain_network_id = "${var.blockchain_network_id}"
 }

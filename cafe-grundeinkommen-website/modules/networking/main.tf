@@ -1,29 +1,56 @@
+
+data "aws_availability_zones" "available" {}
+
 /* Elastic IP for NAT */
 resource "aws_eip" "network_eip" {
   vpc        = true
 }
 
-/* Public subnet */
-resource "aws_subnet" "public_subnet" {
-  vpc_id                  = "${var.vpc_id}"
-  cidr_block              = "${var.public_subnet_cidr}"
-  availability_zone       = "${var.availability_zone}"
-  map_public_ip_on_launch = true
+/* NAT */
+resource "aws_nat_gateway" "network_nat_gateway" {
+  allocation_id = "${aws_eip.network_eip.id}"
+  subnet_id     = "${element(aws_subnet.public_subnet.*.id, 0)}"
 
   tags {
-    Name        = "${var.project_prefix}-${var.availability_zone}-public-subnet"
+    Name        = "${var.project_prefix}-${element(var.availability_zones, count.index)}-nat"
     Environment = "${var.environment}"
   }
 }
 
-
-/* NAT */
-resource "aws_nat_gateway" "network_nat_gateway" {
-  allocation_id = "${aws_eip.network_eip.id}"
-  subnet_id     = "${aws_subnet.public_subnet.id}"
+/* Public subnet */
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = "${var.vpc_id}"
+  count                   = "${length(var.public_subnets_cidr)}"
+  cidr_block              = "${element(var.public_subnets_cidr, count.index)}"
+  availability_zone       = "${element(var.availability_zones, count.index)}"
+  map_public_ip_on_launch = true
 
   tags {
-    Name        = "${var.project_prefix}-${var.availability_zone}-nat"
+    Name        = "${var.project_prefix}-${element(var.availability_zones, count.index)}-public-subnet"
+    Environment = "${var.environment}"
+  }
+}
+
+/* Private subnet */
+resource "aws_subnet" "private_subnet" {
+  vpc_id                  = "${var.vpc_id}"
+  count                   = "${length(var.private_subnets_cidr)}"
+  cidr_block              = "${element(var.private_subnets_cidr, count.index)}"
+  availability_zone       = "${element(var.availability_zones, count.index)}"
+  map_public_ip_on_launch = false
+
+  tags {
+    Name        = "${var.project_prefix}-${element(var.availability_zones, count.index)}-private-subnet"
+    Environment = "${var.environment}"
+  }
+}
+
+/* Routing table for private subnet */
+resource "aws_route_table" "private" {
+  vpc_id = "${var.vpc_id}"
+
+  tags {
+    Name        = "${var.project_prefix}-private-route-table"
     Environment = "${var.environment}"
   }
 }
@@ -44,14 +71,24 @@ resource "aws_route" "public_internet_gateway" {
   gateway_id             = "${var.igw_id}"
 }
 
+resource "aws_route" "private_nat_gateway" {
+  route_table_id         = "${aws_route_table.private.id}"
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = "${aws_nat_gateway.network_nat_gateway.id}"
+}
+
 /* Route table associations */
 resource "aws_route_table_association" "public" {
-  count          = "${length(var.public_subnet_cidr)}"
+  count          = "${length(var.public_subnets_cidr)}"
   subnet_id      = "${element(aws_subnet.public_subnet.*.id, count.index)}"
   route_table_id = "${aws_route_table.public.id}"
 }
 
-// todo: this is only relevant if it's behind a load balancer
+resource "aws_route_table_association" "private" {
+  count           = "${length(var.private_subnets_cidr)}"
+  subnet_id       = "${element(aws_subnet.private_subnet.*.id, count.index)}"
+  route_table_id  = "${aws_route_table.private.id}"
+}
 
 /*====
 VPC's Default Security Group

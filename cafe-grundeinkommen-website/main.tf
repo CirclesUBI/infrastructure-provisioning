@@ -25,9 +25,9 @@ data "terraform_remote_state" "circles_vpc" {
   }
 }
 
-resource "aws_route53_zone" "joincircles" {
-  name = "cafe-grundeinkommen.org"
-}
+# resource "aws_route53_zone" "joincircles" {
+#   name = "cafe-grundeinkommen.org"
+# }
 
 # resource "aws_acm_certificate" "cert" {
 #   domain_name       = "cafe-grundeinkommen.org"
@@ -91,71 +91,178 @@ module "networking" {
   environment          = "${var.environment}"
   vpc_id               = "${data.terraform_remote_state.circles_vpc.vpc_id}"
   igw_id               = "${data.terraform_remote_state.circles_vpc.igw_id}"
-  public_subnet_cidr   = "${element(var.cafe_public_cidrs,0)}"
+  public_subnets_cidr  = "${var.cafe_public_cidrs}"
+  private_subnets_cidr = "${var.cafe_private_cidrs}"
   region               = "${var.aws_region}"
-  availability_zone    = "${element(local.availability_zones,0)}"
+  availability_zones   = "${local.availability_zones}"
 }
 
-
-## ECS
-
-resource "aws_ecs_cluster" "cafe" {
-  name = "${var.project_prefix}-cluster"
-}
-
-data "template_file" "cafe_task_definition" {
-  template   = "${file("${path.module}/cafe-task-def.json")}"
-  depends_on = ["aws_alb.cafe"]
+data "template_file" "cloud_config" {
+  template = "${file("${path.module}/cloud-config.yml")}"
 
   vars {
-    log_group_region        = "${var.aws_region}"
-    log_group_name          = "${aws_cloudwatch_log_group.cafe.name}"
-    mariadb_host            = "${var.mariadb_host}"
-    mariadb_port_number     = "${var.mariadb_port_number}"
-    mariadb_database_user   = "${var.mariadb_database_user}"
-    mariadb_database_name   = "${var.mariadb_database_name}"
-    allow_empty_password    = "${var.allow_empty_password}"
-    mariadb_user            = "${var.mariadb_user}"
-    mariadb_database        = "${var.mariadb_database}"
-    task_family             = "${aws_ecs_task_definition.cafe.family}"
+    aws_region                  = "${var.aws_region}"
+    wordpress_log_group_name    = "${aws_cloudwatch_log_group.cafe.name}"
   }
 }
 
-resource "aws_ecs_task_definition" "cafe" {
-  family                = "cafe-taskdef"
-  container_definitions = "${data.template_file.cafe_task_definition.rendered}"
+resource "aws_launch_configuration" "cafe" {
+  image_id          = "ami-0d33e81ffd9511552"
+  instance_type     = "t2.micro"
+  security_groups   = ["${aws_security_group.instance_sg.id}"]
+  key_name          = "${aws_key_pair.cafe.key_name}"
+  user_data         = "${data.template_file.cloud_config.rendered}"
+  // iam_instance_profile        = "${aws_iam_instance_profile.chat.name}"
+  associate_public_ip_address = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
-resource "aws_ecs_service" "cafe" {
-  name                               = "${var.project_prefix}-ecs-service"
-  cluster                            = "${aws_ecs_cluster.cafe.id}"
-  task_definition                    = "${aws_ecs_task_definition.cafe.arn}"
-  desired_count                      = "${var.asg_desired}"
-  iam_role                           = "${aws_iam_role.ecs_service.name}"
-  deployment_maximum_percent         = "100"
-  deployment_minimum_healthy_percent = "50"
+resource "aws_autoscaling_group" "cafe" {
+  launch_configuration  = "${aws_launch_configuration.cafe.id}"
+  vpc_zone_identifier   = ["${module.networking.private_subnets_id}"]
+  load_balancers        = ["${aws_alb.cafe.name}"]
+  min_size              = 1
+  max_size              = 3
+  desired_capacity      = 1
+  target_group_arns     = ["${aws_alb_target_group.cafe.arn}"]
 
-  load_balancer {
-    target_group_arn = "${aws_alb_target_group.cafe.id}"
-    container_name   = "cafe"
-    container_port   = "3000"
+  tag {
+    key                 = "Name"
+    value               = "${var.project_prefix}-instance"
+    propagate_at_launch = true
   }
 
-  depends_on = [
-    "aws_iam_role_policy.ecs_service",
-    "aws_alb_listener.cafe_http",
-    "aws_alb_listener.cafe_https",
-  ]
+  tag {
+    key                 = "Environment"
+    value               = "${var.environment}"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Project"
+    value               = "${var.project}"
+    propagate_at_launch = true
+  }
 }
 
-# data "template_file" "cloud_config" {
-#   template = "${file("${path.module}/cloud-config.yml")}"
+resource "aws_alb" "cafe" {
+  name                = "${var.project_prefix}-alb"
+  security_groups     = ["${aws_security_group.lb_sg.id}"]
+  subnets             = ["${module.networking.public_subnets_id}"]
+  enable_deletion_protection = false
 
-#   vars {
-#     aws_region                  = "${var.aws_region}"
-#     wordpress_log_group_name = "${aws_cloudwatch_log_group.cafe.name}"
+  tags {
+    Name        = "${var.project_prefix}-cafe-alb"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+  }
+}
+
+
+resource "aws_alb_target_group" "cafe" {
+  name     = "cafe-alb-tg" // "name" cannot be longer than 32 characters
+  port     = "80"
+  protocol = "HTTP"
+  vpc_id   = "${data.terraform_remote_state.circles_vpc.vpc_id}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  stickiness {
+    type = "lb_cookie"
+  }
+
+  tags {
+    Name        = "${var.project_prefix}-alb-tg"
+    Environment = "${var.environment}"
+    Project     = "${var.project}"
+  }
+}
+
+resource "aws_autoscaling_attachment" "cafe" {
+  alb_target_group_arn   = "${aws_alb_target_group.cafe.arn}"
+  autoscaling_group_name = "${aws_autoscaling_group.cafe.id}"
+}
+
+# resource "aws_alb_listener" "cafe" {
+#   load_balancer_arn = "${aws_alb.cafe.id}"
+#   port              = "443"
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2016-08"
+#   // certificate_arn   = "${data.aws_acm_certificate.cafe.arn}"
+
+#   default_action {
+#     target_group_arn = "${aws_alb_target_group.cafe.id}"
+#     type             = "forward"
 #   }
 # }
+
+resource "aws_alb_listener" "cafe_http" {
+  load_balancer_arn = "${aws_alb.cafe.id}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_alb_target_group.cafe.id}"
+    type             = "forward"
+  }
+}
+
+# resource "aws_alb_listener" "cafe_https" {
+#   load_balancer_arn = "${aws_alb.cafe.id}"
+#   port              = "443"
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2016-08"
+#   // certificate_arn   = "${aws_acm_certificate.cafe.arn}"
+
+#   default_action {
+#     target_group_arn = "${aws_alb_target_group.cafe.id}"
+#     type             = "forward"
+#   }
+# }
+
+### Security
+
+resource "aws_security_group" "lb_sg" {
+  description = "controls access to the application ELB"
+
+  vpc_id = "${data.terraform_remote_state.circles_vpc.vpc_id}"
+  name   = "${var.project_prefix}-lb-sg"
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # ingress {
+  #   protocol    = "tcp"
+  #   from_port   = 443
+  #   to_port     = 443
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
+
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+
+    cidr_blocks = [
+      "0.0.0.0/0",
+    ]
+  }
+
+  tags {
+    Name        = "${var.project_prefix}-lb-sg"
+    Environment = "${var.environment}"
+    Project = "${var.project}"
+  }
+}
 
 resource "aws_security_group" "instance_sg" {
   description = "controls direct access to application instances"
@@ -167,9 +274,9 @@ resource "aws_security_group" "instance_sg" {
     from_port = 80
     to_port   = 80
 
-    # security_groups = [
-    #   "${aws_security_group.lb_sg.id}",
-    # ]
+    security_groups = [
+      "${aws_security_group.lb_sg.id}"
+    ]
   }
 
   ingress {
@@ -177,20 +284,20 @@ resource "aws_security_group" "instance_sg" {
     from_port = 22
     to_port   = 22
 
-    # security_groups = [
-    #   "${aws_security_group.lb_sg.id}",
-    # ]
+    security_groups = [
+      "${aws_security_group.lb_sg.id}"
+    ]
   }
 
-  ingress {
-    protocol  = "tcp"
-    from_port = 443
-    to_port   = 443
+  # ingress {
+  #   protocol  = "tcp"
+  #   from_port = 443
+  #   to_port   = 443
 
-    # security_groups = [
-    #   "${aws_security_group.lb_sg.id}",
-    # ]
-  }
+  #   security_groups = [
+  #     "${aws_security_group.lb_sg.id}"
+  #   ]
+  # }
 
   egress {
     from_port   = 0
@@ -209,36 +316,6 @@ resource "aws_security_group" "instance_sg" {
 resource "aws_key_pair" "cafe" {
   key_name   = "cafe-grundeinkommen-website"
   public_key = "${file("ssh/cafe-grundeinkommen-website.pub")}"
-}
-
-resource "aws_instance" "wordpress" {
-  ami = "ami-0d33e81ffd9511552" // eu-central-1	bionic	18.04 LTS	amd64	hvm:ebs-ssd	20190429	ami-0d33e81ffd9511552	hvm
-
-  # free tier eligible
-  instance_type = "t2.micro"
-
-  availability_zone = "${element(local.availability_zones,0)}"
-  security_groups = ["${aws_security_group.instance_sg.id}"]
-  subnet_id = "${module.networking.public_subnet_id}"
-
-  key_name = "${aws_key_pair.cafe.key_name}"
-
-  # add a public IP address
-  associate_public_ip_address = true
-
-  user_data                   = "${data.template_file.cloud_config.rendered}"
-
-  root_block_device = {
-    "volume_type"           = "standard"
-    "volume_size"           = 15
-    "delete_on_termination" = false
-  }
-
-  tags {
-    Project     = "${var.project}"
-    Name        = "${var.project_prefix}-instance"
-    Environment = "${var.environment}"
-  }
 }
 
 resource "aws_cloudwatch_log_group" "cafe" {

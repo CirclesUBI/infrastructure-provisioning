@@ -1,0 +1,80 @@
+{
+  "containerDefinitions": [
+    {
+      "name": "wordpress",
+      "cpu": 128,
+      "essential": true,
+      "image": "bitnami/wordpress:latest",
+      "memory": 512,
+      "links": [
+        "mariadb"
+      ],    
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${log_group_name}",
+          "awslogs-region": "${log_group_region}",
+          "awslogs-stream-prefix": "wordpress"
+        }
+      },
+      "environment": [
+        {
+          "name": "MARIADB_HOST",
+          "value": "${mariadb_host}"
+        },
+        {
+          "name": "MARIADB_PORT_NUMBER",
+          "value": "${mariadb_port_number}"
+        },
+        {
+          "name": "WORDPRESS_DATABASE_USER",
+          "value": "${mariadb_database_user}"
+        },
+        {
+          "name": "WORDPRESS_DATABASE_NAME",
+          "value": "${mariadb_database_name}"
+        },
+        {
+          "name": "ALLOW_EMPTY_PASSWORD",
+          "value": "${allow_empty_password}"
+        }
+      ]
+    },
+    {
+      "name": "mariadb",
+      "cpu": 128,
+      "essential": true,
+      "image": "bitnami/mariadb:latest",
+      "memory": 512,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${log_group_name}",
+          "awslogs-region": "${log_group_region}",
+          "awslogs-stream-prefix": "mariadb"
+        }
+      },
+      "environment": [
+        {
+          "name": "MARIADB_USER",
+          "value": "${mariadb_user}"
+        },
+        {
+          "name": "MARIADB_DATABASE",
+          "value": "${mariadb_database}"
+        },
+        {
+          "name": "ALLOW_EMPTY_PASSWORD",
+          "value": "${allow_empty_password}"
+        }
+      ]
+    }
+  ],
+  "family": "${task_family}"
+}

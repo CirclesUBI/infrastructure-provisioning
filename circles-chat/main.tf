@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket         = "circles-chat-terraform"
+    bucket         = "circles-chat-terraform-state"
     region         = "eu-central-1"
     key            = "circles-chat-terraform.tfstate"
     dynamodb_table = "circles-chat-terraform"
@@ -20,7 +20,7 @@ data "aws_availability_zones" "default" {}
 data "terraform_remote_state" "circles_vpc" {
   backend = "s3"
   config {
-    bucket         = "circles-vpc-terraform"
+    bucket         = "circles-vpc-terraform-state"
     region         = "eu-central-1"
     key            = "circles-vpc-terraform.tfstate"
     dynamodb_table = "circles-vpc-terraform"
@@ -29,10 +29,10 @@ data "terraform_remote_state" "circles_vpc" {
 }
 
 
-data "aws_acm_certificate" "chat_joincircles" {
-  domain   = "chat.joincircles.net"
-  statuses = ["ISSUED"]
-}
+# data "aws_acm_certificate" "chat_joincircles" {
+#   domain   = "chat.joincircles.net"
+#   statuses = ["ISSUED"]
+# }
 
 ## EC2
 data "aws_ami" "stable_coreos" {
@@ -72,11 +72,12 @@ resource "aws_subnet" "public" {
   cidr_block        = "${element(var.chat_public_cidrs, count.index)}"
   availability_zone = "${data.aws_availability_zones.default.names[count.index]}"
 
-  tags {
-    Name = "${var.project_prefix}-public-subnet-${count.index}"
-    Environment = "${var.environment}"
-    Project = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-public-subnet-${count.index}"
+    )
+  )}"
 }
 
 
@@ -88,11 +89,12 @@ resource "aws_route_table" "default" {
     gateway_id = "${data.terraform_remote_state.circles_vpc.igw_id}"
   }
 
-  tags {
-    Name        = "${var.project_prefix}-route-table"
-    Environment = "${var.environment}"
-    Project = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-route-table"
+    )
+  )}"
 }
 
 resource "aws_route_table_association" "default" {
@@ -104,7 +106,7 @@ resource "aws_route_table_association" "default" {
 ### Compute
 
 resource "aws_autoscaling_group" "chat" {
-  name                 = "${var.project_prefix}-asg"
+  name                 = "${var.project}-asg"
   vpc_zone_identifier  = ["${aws_subnet.public.*.id}"]
   min_size             = "${var.asg_min}"
   max_size             = "${var.asg_max}"
@@ -113,18 +115,23 @@ resource "aws_autoscaling_group" "chat" {
 
   tags = [
     {
-      key                 = "Name"
-      value               = "${var.project_prefix}-instance"
+      key                 = "name"
+      value               = "${var.project}-instance"
       propagate_at_launch = true
     },
     {
-      key                 = "Environment"
+      key                 = "environment"
       value               = "${var.environment}"
       propagate_at_launch = true
     },
-        {
-      key                 = "Project"
+    {
+      key                 = "project"
       value               = "${var.project}"
+      propagate_at_launch = true
+    },
+    {
+      key                 = "emergency)contact"
+      value               = "${var.emergency_contact}"
       propagate_at_launch = true
     }
   ]
@@ -167,7 +174,7 @@ resource "aws_security_group" "lb_sg" {
   description = "controls access to the application ELB"
 
   vpc_id = "${data.terraform_remote_state.circles_vpc.vpc_id}"
-  name   = "${var.project_prefix}-lb-sg"
+  name   = "${var.project}-lb-sg"
 
   ingress {
     protocol    = "tcp"
@@ -193,17 +200,18 @@ resource "aws_security_group" "lb_sg" {
     ]
   }
 
-  tags {
-    Name        = "${var.project_prefix}-lb-sg"
-    Environment = "${var.environment}"
-    Project = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-lb-sg"
+    )
+  )}"
 }
 
 resource "aws_security_group" "instance_sg" {
   description = "controls direct access to application instances"
   vpc_id      = "${data.terraform_remote_state.circles_vpc.vpc_id}"
-  name        = "${var.project_prefix}-inst-sg"
+  name        = "${var.project}-inst-sg"
 
   ingress {
     protocol  = "tcp"
@@ -232,17 +240,18 @@ resource "aws_security_group" "instance_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    Name        = "${var.project_prefix}-instance-sg"
-    Environment = "${var.environment}"
-    Project = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-instance-sg"
+    )
+  )}"
 }
 
 ## ECS
 
 resource "aws_ecs_cluster" "chat" {
-  name = "${var.project_prefix}-cluster"
+  name = "${var.project}-cluster"
 }
 
 data "template_file" "chat_task_definition" {
@@ -267,7 +276,7 @@ resource "aws_ecs_task_definition" "chat" {
 }
 
 resource "aws_ecs_service" "chat" {
-  name                               = "${var.project_prefix}-ecs-service"
+  name                               = "${var.project}-ecs-service"
   cluster                            = "${aws_ecs_cluster.chat.id}"
   task_definition                    = "${aws_ecs_task_definition.chat.arn}"
   desired_count                      = "${var.asg_desired}"
@@ -284,14 +293,14 @@ resource "aws_ecs_service" "chat" {
   depends_on = [
     "aws_iam_role_policy.ecs_service",
     "aws_alb_listener.chat_http",
-    "aws_alb_listener.chat_https",
+    // "aws_alb_listener.chat_https",
   ]
 }
 
 ## IAM
 
 resource "aws_iam_role" "ecs_service" {
-  name = "${var.project_prefix}-ecs-service-role"
+  name = "${var.project}-ecs-service-role"
 
   assume_role_policy = <<EOF
 {
@@ -311,7 +320,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
-  name = "${var.project_prefix}-ecs-policy"
+  name = "${var.project}-ecs-policy"
   role = "${aws_iam_role.ecs_service.name}"
 
   policy = <<EOF
@@ -336,12 +345,12 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "chat" {
-  name = "${var.project_prefix}-instance-profile"
+  name = "${var.project}-instance-profile"
   role = "${aws_iam_role.instance.name}"
 }
 
 resource "aws_iam_role" "instance" {
-  name = "${var.project_prefix}-instance-role"
+  name = "${var.project}-instance-role"
 
   assume_role_policy = <<EOF
 {
@@ -370,7 +379,7 @@ data "template_file" "instance_profile" {
 }
 
 resource "aws_iam_role_policy" "instance" {
-  name   = "${var.project_prefix}-instance-policy"
+  name   = "${var.project}-instance-policy"
   role   = "${aws_iam_role.instance.name}"
   policy = "${data.template_file.instance_profile.rendered}"
 }
@@ -378,7 +387,7 @@ resource "aws_iam_role_policy" "instance" {
 ## ALB
 
 resource "aws_alb_target_group" "chat" {
-  name     = "${var.project_prefix}-alb-tg"
+  name     = "${var.project}-alb-tg"
   port     = "80"
   protocol = "HTTP"
   vpc_id   = "${data.terraform_remote_state.circles_vpc.vpc_id}"
@@ -391,38 +400,40 @@ resource "aws_alb_target_group" "chat" {
     type = "lb_cookie"
   }
 
-  tags {
-    Name        = "${var.project_prefix}-alb-tg"
-    Environment = "${var.environment}"
-    Project = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-alb-tg"
+    )
+  )}"
 }
 
 resource "aws_alb" "chat" {
-  name                       = "${var.project_prefix}-alb"
+  name                       = "${var.project}-alb"
   subnets                    = ["${aws_subnet.public.*.id}"]
   security_groups            = ["${aws_security_group.lb_sg.id}"]
   enable_deletion_protection = true
 
-  tags {
-    Name        = "${var.project_prefix}-chat-alb"
-    Environment = "${var.environment}"
-    Project = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-chat-alb"
+    )
+  )}"
 }
 
-resource "aws_alb_listener" "chat" {
-  load_balancer_arn = "${aws_alb.chat.id}"
-  port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = "${data.aws_acm_certificate.chat_joincircles.arn}"
+# resource "aws_alb_listener" "chat" {
+#   load_balancer_arn = "${aws_alb.chat.id}"
+#   port              = "443"
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2016-08"
+#   certificate_arn   = "${data.aws_acm_certificate.chat_joincircles.arn}"
 
-  default_action {
-    target_group_arn = "${aws_alb_target_group.chat.id}"
-    type             = "forward"
-  }
-}
+#   default_action {
+#     target_group_arn = "${aws_alb_target_group.chat.id}"
+#     type             = "forward"
+#   }
+# }
 
 resource "aws_alb_listener" "chat_http" {
   load_balancer_arn = "${aws_alb.chat.id}"
@@ -435,39 +446,41 @@ resource "aws_alb_listener" "chat_http" {
   }
 }
 
-resource "aws_alb_listener" "chat_https" {
-  load_balancer_arn = "${aws_alb.chat.id}"
-  port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = "${data.aws_acm_certificate.chat_joincircles.arn}"
+# resource "aws_alb_listener" "chat_https" {
+#   load_balancer_arn = "${aws_alb.chat.id}"
+#   port              = "443"
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2016-08"
+#   certificate_arn   = "${data.aws_acm_certificate.chat_joincircles.arn}"
 
-  default_action {
-    target_group_arn = "${aws_alb_target_group.chat.id}"
-    type             = "forward"
-  }
-}
+#   default_action {
+#     target_group_arn = "${aws_alb_target_group.chat.id}"
+#     type             = "forward"
+#   }
+# }
 
 ## CloudWatch Logs
 
 resource "aws_cloudwatch_log_group" "ecs" {
-  name              = "${var.project_prefix}-chat-ecs"
+  name              = "${var.project}-chat-ecs"
   retention_in_days = "60"
 
-  tags {
-    Name        = "${var.project_prefix}-chat-ecs"
-    Environment = "${var.environment}"
-    Project = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-chat-ecs"
+    )
+  )}"
 }
 
 resource "aws_cloudwatch_log_group" "chat" {
-  name              = "${var.project_prefix}-chat"
+  name              = "${var.project}-chat"
   retention_in_days = "60"
 
-  tags {
-    Name        = "${var.project_prefix}-chat"
-    Environment = "${var.environment}"
-    Project = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-chat"
+    )
+  )}"
 }

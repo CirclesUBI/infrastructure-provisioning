@@ -10,7 +10,7 @@ variable "image_name" {
   description = "The name of the docker image ECR"
 }
 
-variable "project_prefix" {
+variable "project" {
   description = "Name prefix for resources."
 }
 

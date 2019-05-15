@@ -1,8 +1,13 @@
+variable "common_tags" {
+  description = "Common tags."
+  type = "map"
+}
+
 variable "vpc_id" {
   description = "The VPC id"
 }
 
-variable "project_prefix" {
+variable "project" {
   description = "Name prefix for resources."
 }
 

@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "circles_api" {
-  bucket        = "${var.project_prefix}"
+  bucket        = "${var.project}"
   acl           = "private"
   force_destroy = true
 }
@@ -65,7 +65,7 @@ data "template_file" "buildspec_build" {
 
 
 resource "aws_codebuild_project" "build" {
-  name          = "${var.project_prefix}-build"
+  name          = "${var.project}-build"
   build_timeout = "10"
   service_role  = "${aws_iam_role.codebuild_role.arn}"
   # badge_enabled  = true // InvalidInputException: Build badges are not supported for CodePipeline source
@@ -89,7 +89,7 @@ resource "aws_codebuild_project" "build" {
 }
 
 resource "aws_codebuild_project" "test" {
-  name          = "${var.project_prefix}-test"
+  name          = "${var.project}-test"
   build_timeout = "15"
   service_role  = "${aws_iam_role.codebuild_role.arn}"
   # badge_enabled  = true // InvalidInputException: Build badges are not supported for CodePipeline source
@@ -189,7 +189,7 @@ resource "aws_codebuild_project" "test" {
 /* CodePipeline */
 
 resource "aws_codepipeline" "pipeline" {
-  name     = "${var.project_prefix}-pipeline"
+  name     = "${var.project}-pipeline"
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
 
   artifact_store {
@@ -230,7 +230,7 @@ resource "aws_codepipeline" "pipeline" {
       output_artifacts = ["source-2"]
 
       configuration {
-        ProjectName = "${var.project_prefix}-test"
+        ProjectName = "${var.project}-test"
       }
     }
   }
@@ -248,7 +248,7 @@ resource "aws_codepipeline" "pipeline" {
       output_artifacts = ["imagedefinitions"]
 
       configuration {
-        ProjectName = "${var.project_prefix}-build"
+        ProjectName = "${var.project}-build"
       }
     }
   }

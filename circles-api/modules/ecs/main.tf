@@ -2,12 +2,14 @@
 Cloudwatch Log Group
 ======*/
 resource "aws_cloudwatch_log_group" "circles_api" {
-  name = "${var.project_prefix}-logs"
+  name = "${var.project}-logs"
 
-  tags {
-    Application = "${var.project_prefix}"
-    Environment = "${var.environment}"    
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-logs"
+    )
+  )}"
 }
 
 /*====
@@ -21,7 +23,7 @@ resource "aws_ecr_repository" "circles_api" {
 ECS cluster
 ======*/
 resource "aws_ecs_cluster" "circles_api" {
-  name = "${var.project_prefix}-ecs-cluster"
+  name = "${var.project}-ecs-cluster"
 }
 
 /*====
@@ -86,10 +88,12 @@ resource "aws_security_group" "ecs_service" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    Name        = "${var.environment}-ecs-service-sg"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.environment}-ecs-service-sg"
+    )
+  )}"
 }
 
 /* Simply specify the family to find the latest ACTIVE revision in that family */
@@ -99,7 +103,7 @@ data "aws_ecs_task_definition" "circles_api" {
 }
 
 resource "aws_ecs_service" "circles_api" {
-  name            = "${var.project_prefix}-ecs-service"
+  name            = "${var.project}-ecs-service"
   task_definition = "${aws_ecs_task_definition.circles_api.family}:${max("${aws_ecs_task_definition.circles_api.revision}", "${data.aws_ecs_task_definition.circles_api.revision}")}"
   desired_count   = 2
   launch_type     = "FARGATE"
@@ -128,7 +132,7 @@ resource "random_id" "target_group_sufix" {
 }
 
 resource "aws_alb_target_group" "circles_api" {
-  name     = "${var.project_prefix}-${var.environment}-alb-tg"
+  name     = "${var.project}-${var.environment}-alb-tg"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = "${var.vpc_id}"
@@ -141,7 +145,7 @@ resource "aws_alb_target_group" "circles_api" {
 
 /* security group for ALB */
 resource "aws_security_group" "api_inbound_sg" {
-  name        = "${var.project_prefix}-inbound-sg"
+  name        = "${var.project}-inbound-sg"
   description = "Allow HTTPS from Anywhere into ALB"
   vpc_id      = "${var.vpc_id}"
 
@@ -166,23 +170,26 @@ resource "aws_security_group" "api_inbound_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    Name = "${var.project_prefix}-inbound-sg"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-inbound-sg"
+    )
+  )}"
 }
 
 resource "aws_alb" "circles_api" {
-  name            = "${var.project_prefix}-alb"
+  name            = "${var.project}-alb"
   subnets         = ["${var.public_subnet_ids}"]
   security_groups = ["${var.security_groups_ids}", "${aws_security_group.api_inbound_sg.id}"]
 
-  tags {
-    Name        = "${var.project_prefix}-alb"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-alb"
+    )
+  )}"
 }
-
 resource "aws_alb_listener" "circles_api_http" {
   load_balancer_arn = "${aws_alb.circles_api.arn}"
   port              = "80"
@@ -278,7 +285,7 @@ ECS service
 /* Security Group for ECS */
 resource "aws_security_group" "api_ecs_service" {
   vpc_id      = "${var.vpc_id}"
-  name        = "${var.project_prefix}-ecs-service-sg"
+  name        = "${var.project}-ecs-service-sg"
   description = "Allow egress from container"
 
   egress {
@@ -288,10 +295,12 @@ resource "aws_security_group" "api_ecs_service" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    Name        = "${var.project_prefix}-ecs-service-sg"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-ecs-service-sg"
+    )
+  )}"
 }
 
 /*====
@@ -299,11 +308,11 @@ Auto Scaling for ECS
 ======*/
 
 resource "aws_iam_role" "ecs_autoscale_role" {
-  name               = "${var.project_prefix}-ecs-autoscale-role"
+  name               = "${var.project}-ecs-autoscale-role"
   assume_role_policy = "${file("${path.module}/policies/ecs-autoscale-role.json")}"
 }
 resource "aws_iam_role_policy" "ecs_autoscale_role_policy" {
-  name   = "${var.project_prefix}-ecs-autoscale-role-policy"
+  name   = "${var.project}-ecs-autoscale-role-policy"
   policy = "${file("${path.module}/policies/ecs-autoscale-role-policy.json")}"
   role   = "${aws_iam_role.ecs_autoscale_role.id}"
 }
@@ -318,7 +327,7 @@ resource "aws_appautoscaling_target" "circles_api" {
 }
 
 resource "aws_appautoscaling_policy" "up" {
-  name                    = "${var.project_prefix}-scale-up"
+  name                    = "${var.project}-scale-up"
   service_namespace       = "ecs"
   resource_id             = "service/${aws_ecs_cluster.circles_api.name}/${aws_ecs_service.circles_api.name}"
   scalable_dimension      = "ecs:service:DesiredCount"
@@ -339,7 +348,7 @@ resource "aws_appautoscaling_policy" "up" {
 }
 
 resource "aws_appautoscaling_policy" "down" {
-  name                    = "${var.project_prefix}-scale-down"
+  name                    = "${var.project}-scale-down"
   service_namespace       = "ecs"
   resource_id             = "service/${aws_ecs_cluster.circles_api.name}/${aws_ecs_service.circles_api.name}"
   scalable_dimension      = "ecs:service:DesiredCount"
@@ -360,7 +369,7 @@ resource "aws_appautoscaling_policy" "down" {
 
 /* metric used for auto scale */
 resource "aws_cloudwatch_metric_alarm" "service_cpu_high" {
-  alarm_name          = "${var.project_prefix}-${var.environment}-cpu-util-high"
+  alarm_name          = "${var.project}-${var.environment}-cpu-util-high"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "2"
   metric_name         = "CPUUtilization"

@@ -1,3 +1,12 @@
+locals {
+  common_tags = {
+    team              = "circles"
+    project           = "circles-api"
+    environment       = "dev"
+    emergency_contact = "Ed: +4917643698891"
+  }
+}
+
 variable "access_key" {
   description = "AWS access key"
 }
@@ -11,7 +20,16 @@ variable "aws_region" {
   default     = "eu-central-1"
 }
 
-variable "project_prefix" {
+variable "aws_account_id" {
+  description = "The AWS account ID."
+}
+
+variable "team" {
+  description = "Owner of resources."
+  default     = "circles"
+}
+
+variable "project" {
   description = "Name prefix for resources."
   default     = "circles-api"
 }
@@ -19,6 +37,11 @@ variable "project_prefix" {
 variable "environment" {
   description = "Environment setting."
   default     = "dev"
+}
+
+variable "emergency_contact" {
+  description = "Who to call if there is an emergency."
+  default     = "circles-api"
 }
 
 variable "app_version" {

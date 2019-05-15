@@ -5,21 +5,23 @@ resource "aws_subnet" "rds" {
   map_public_ip_on_launch = true
   availability_zone = "${element(var.availability_zones, count.index)}"
 
-  tags {
-    Project = "${var.project}"
-    Name = "${var.project_prefix}-rds-${element(var.availability_zones, count.index)}"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-rds-${element(var.availability_zones, count.index)}"
+    )
+  )}"
 }
 
 resource "aws_route_table" "rds" {
   vpc_id = "${var.vpc_id}"
 
-  tags {
-    Project     = "${var.project}"
-    Name        = "${var.project_prefix}-rds-route-table"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-rds-route-table"
+    )
+  )}"
 }
 
 resource "aws_route" "public_internet_gateway" {
@@ -35,19 +37,20 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_db_subnet_group" "default" {
-  name = "${var.project_prefix}-${var.rds_instance_identifier}-subnet-group"
+  name = "${var.project}-${var.rds_instance_identifier}-subnet-group"
   description = "RDS subnet group"
   subnet_ids = ["${aws_subnet.rds.*.id}"]
 
-  tags {
-    Project     = "${var.project}"
-    Name        = "${var.project_prefix}-rds-subnet-group"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-rds-subnet-group"
+    )
+  )}"
 }
 
 resource "aws_security_group" "rds" {
-  name = "${var.project_prefix}-rds-sg"
+  name = "${var.project}-rds-sg"
   description = "RDS PostgreSQL"
   vpc_id = "${var.vpc_id}"
   # Keep the instance private by only allowing traffic from the web server.
@@ -66,11 +69,12 @@ resource "aws_security_group" "rds" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    Project     = "${var.project}"
-    Name        = "${var.project_prefix}-rds-sg"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-rds-sg"
+    )
+  )}"
 }
 
 resource "aws_db_instance" "default" {
@@ -88,11 +92,12 @@ resource "aws_db_instance" "default" {
   final_snapshot_identifier = "Ignore"
   publicly_accessible = true
 
-  tags {
-    Project     = "${var.project}"
-    Name        = "${var.project_prefix}-rds"    
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-rds"
+    )
+  )}"
 }
 
 resource "aws_db_parameter_group" "default" {

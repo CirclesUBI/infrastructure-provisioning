@@ -19,3 +19,5 @@
 **/state-files/
 
 # temp
+rocketchat/
+cognito/

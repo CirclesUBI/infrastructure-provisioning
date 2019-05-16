@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket         = "circles-vpc-terraform"
+    bucket         = "circles-vpc-terraform-state"
     region         = "eu-central-1"
     key            = "circles-vpc-terraform.tfstate"
     dynamodb_table = "circles-vpc-terraform"
@@ -26,21 +26,24 @@ resource "aws_vpc" "default" {
 
   enable_dns_hostnames = true
 
-  tags {
-    Name        = "${var.project_prefix}"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}"
+    )
+  )}"
 }
+
 
 resource "aws_internet_gateway" "default" {
   vpc_id = "${aws_vpc.default.id}"
 
-  tags {
-    Name        = "${var.project_prefix}-internet-gateway"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-internet-gateway"
+    )
+  )}"
 }
 
 # Logging
@@ -53,18 +56,19 @@ resource "aws_flow_log" "circles_vpc_flow_log" {
 }
 
 resource "aws_cloudwatch_log_group" "circles_vpc" {
-  name              = "${var.project_prefix}"
+  name              = "${var.project}"
   retention_in_days = "30"
 
-  tags {
-    Name        = "${var.project_prefix}"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-logs"
+    )
+  )}"
 }
 
 resource "aws_iam_role" "circles_vpc_role" {
-  name = "${var.project_prefix}-role"
+  name = "${var.project}-role"
 
   assume_role_policy = <<EOF
 {
@@ -84,7 +88,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "circles_vpc_logging_policy" {
-  name = "${var.project_prefix}-policy"
+  name = "${var.project}-policy"
   role = "${aws_iam_role.circles_vpc_role.id}"
 
   policy = <<EOF

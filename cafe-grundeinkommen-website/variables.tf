@@ -10,6 +10,10 @@ variable "aws_region" {
   description = "The AWS region to create things in."
 }
 
+variable "aws_account_id" {
+  description = "The AWS Account to use."
+}
+
 variable "blueprint_id" {
   description = "Blueprint for lightsail instance."  
 }

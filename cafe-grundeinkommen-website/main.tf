@@ -9,9 +9,10 @@ terraform {
 }
 
 provider "aws" {
-  access_key = "${var.access_key}"
-  secret_key = "${var.secret_key}"
-  region     = "${var.aws_region}"
+  access_key          = "${var.access_key}"
+  secret_key          = "${var.secret_key}"
+  region              = "${var.aws_region}"
+  allowed_account_ids = ["${var.aws_account_id}"]
 }
 
 data "terraform_remote_state" "circles_vpc" {
@@ -87,7 +88,7 @@ variable "cafe_private_cidrs" {
 
 module "networking" {
   source               = "./modules/networking"
-  project_prefix       = "${var.project_prefix}"
+  project_prefix       = "${var.project}"
   environment          = "${var.environment}"
   vpc_id               = "${data.terraform_remote_state.circles_vpc.vpc_id}"
   igw_id               = "${data.terraform_remote_state.circles_vpc.igw_id}"
@@ -131,7 +132,7 @@ resource "aws_autoscaling_group" "cafe" {
 
   tag {
     key                 = "Name"
-    value               = "${var.project_prefix}-instance"
+    value               = "${var.project}-instance"
     propagate_at_launch = true
   }
 
@@ -149,16 +150,17 @@ resource "aws_autoscaling_group" "cafe" {
 }
 
 resource "aws_alb" "cafe" {
-  name                = "${var.project_prefix}-alb"
+  name                = "${var.project}-alb"
   security_groups     = ["${aws_security_group.lb_sg.id}"]
   subnets             = ["${module.networking.public_subnets_id}"]
   enable_deletion_protection = false
 
-  tags {
-    Name        = "${var.project_prefix}-cafe-alb"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-alb"
+    )
+  )}"
 }
 
 
@@ -176,11 +178,12 @@ resource "aws_alb_target_group" "cafe" {
     type = "lb_cookie"
   }
 
-  tags {
-    Name        = "${var.project_prefix}-alb-tg"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-alb-tg"
+    )
+  )}"
 }
 
 resource "aws_autoscaling_attachment" "cafe" {
@@ -231,7 +234,7 @@ resource "aws_security_group" "lb_sg" {
   description = "controls access to the application ELB"
 
   vpc_id = "${data.terraform_remote_state.circles_vpc.vpc_id}"
-  name   = "${var.project_prefix}-lb-sg"
+  name   = "${var.project}-lb-sg"
 
   ingress {
     protocol    = "tcp"
@@ -257,17 +260,17 @@ resource "aws_security_group" "lb_sg" {
     ]
   }
 
-  tags {
-    Name        = "${var.project_prefix}-lb-sg"
-    Environment = "${var.environment}"
-    Project = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-lb-sg"
+    )
+  )}"
 }
-
 resource "aws_security_group" "instance_sg" {
   description = "controls direct access to application instances"
   vpc_id      = "${data.terraform_remote_state.circles_vpc.vpc_id}"
-  name        = "${var.project_prefix}-instsg"
+  name        = "${var.project}-instsg"
 
   ingress {
     protocol  = "tcp"
@@ -306,11 +309,12 @@ resource "aws_security_group" "instance_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    Name        = "${var.project_prefix}-instance-sg"
-    Environment = "${var.environment}"
-    Project     = "${var.project}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-instance-sg"
+    )
+  )}"
 }
 
 resource "aws_key_pair" "cafe" {
@@ -319,12 +323,13 @@ resource "aws_key_pair" "cafe" {
 }
 
 resource "aws_cloudwatch_log_group" "cafe" {
-  name              = "${var.project_prefix}-logs"
-  retention_in_days = "60"
+  name              = "${var.project}-logs"
+  retention_in_days = "30"
 
-  tags {
-    Project     = "${var.project}"
-    Name        = "${var.project_prefix}-logs"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.project}-logs"
+    )
+  )}"
 }

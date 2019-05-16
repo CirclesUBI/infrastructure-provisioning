@@ -35,10 +35,14 @@ resource "aws_sns_platform_application" "gcm_application" {
 # }
 
 module "sms" {
-  source                        = "./modules/sms"
-  providers                     = {aws = "aws.ireland"}
-  delivery_status_iam_role_arn  = "${aws_iam_role.sns_sms_feedback.arn}"
-  sms_log_bucket                = "circles-sns-sms-daily-usage"
+  source = "./modules/sms"
+
+  providers = {
+    aws = "aws.ireland"
+  }
+
+  delivery_status_iam_role_arn = "${aws_iam_role.sns_sms_feedback.arn}"
+  sms_log_bucket               = "circles-sns-sms-daily-usage"
 }
 
 # notifs
@@ -54,27 +58,35 @@ resource "aws_sns_topic_policy" "transfer" {
 
 data "aws_iam_policy_document" "sns_transfer" {
   policy_id = "${var.project}-sns-transfer"
+
   statement {
     actions = [
       "SNS:Publish",
     ]
+
     condition {
-      test = "ArnLike"
+      test     = "ArnLike"
       variable = "aws:SourceArn"
 
       values = [
         "*",
       ]
     }
+
     effect = "Allow"
+
     principals {
       type = "AWS"
+
       identifiers = [
-        "*"]
+        "*",
+      ]
     }
+
     resources = [
       "${aws_sns_topic.transfer.arn}",
     ]
+
     sid = "${var.project}-transfer"
   }
 }

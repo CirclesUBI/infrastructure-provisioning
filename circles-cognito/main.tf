@@ -16,14 +16,14 @@ provider "aws" {
 }
 
 resource "aws_cognito_user_pool" "users" {
-  name = "circles-mobile-userpool"
-  email_verification_subject  = "Your Circles verification code"
-  email_verification_message  = "Your Circles verification code is {####}. "
-  sms_authentication_message  = "Your Circles authentication code is {####}. "  
-  sms_verification_message    = "Your Circles verification code is {####}. "
-  username_attributes         = ["phone_number"]
-  auto_verified_attributes    = ["email"]
-  mfa_configuration           = "OPTIONAL"
+  name                       = "circles-mobile-userpool"
+  email_verification_subject = "Your Circles verification code"
+  email_verification_message = "Your Circles verification code is {####}. "
+  sms_authentication_message = "Your Circles authentication code is {####}. "
+  sms_verification_message   = "Your Circles verification code is {####}. "
+  username_attributes        = ["phone_number"]
+  auto_verified_attributes   = ["email"]
+  mfa_configuration          = "OPTIONAL"
 
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
@@ -38,33 +38,35 @@ resource "aws_cognito_user_pool" "users" {
   }
 
   sms_configuration {
-    external_id     = "${var.sms_configuration_external_id}" 
-    sns_caller_arn  = "${aws_iam_role.cidp_sms.arn}"
+    external_id    = "${var.sms_configuration_external_id}"
+    sns_caller_arn = "${aws_iam_role.cidp_sms.arn}"
   }
-  
+
   device_configuration {
     challenge_required_on_new_device      = false
     device_only_remembered_on_user_prompt = false
   }
 
   schema {
-    attribute_data_type = "String"
+    attribute_data_type      = "String"
     developer_only_attribute = false
-    mutable = true
-    name = "picture"
-    required = true
+    mutable                  = true
+    name                     = "picture"
+    required                 = true
+
     string_attribute_constraints {
       max_length = 2048
       min_length = 0
     }
   }
-  
+
   schema {
-    attribute_data_type = "String"
+    attribute_data_type      = "String"
     developer_only_attribute = false
-    mutable = true
-    name = "deviceId"
-    required = false
+    mutable                  = true
+    name                     = "deviceId"
+    required                 = false
+
     string_attribute_constraints {
       max_length = 256
       min_length = 1
@@ -72,11 +74,12 @@ resource "aws_cognito_user_pool" "users" {
   }
 
   schema {
-    attribute_data_type = "String"
+    attribute_data_type      = "String"
     developer_only_attribute = false
-    mutable = true
-    name = "device_id"
-    required = false
+    mutable                  = true
+    name                     = "device_id"
+    required                 = false
+
     string_attribute_constraints {
       max_length = 256
       min_length = 1
@@ -84,11 +87,12 @@ resource "aws_cognito_user_pool" "users" {
   }
 
   schema {
-    attribute_data_type = "String"
+    attribute_data_type      = "String"
     developer_only_attribute = false
-    mutable = true
-    name = "agreedToDisclaimer"
-    required = false
+    mutable                  = true
+    name                     = "agreedToDisclaimer"
+    required                 = false
+
     string_attribute_constraints {
       max_length = 5
       min_length = 4
@@ -96,11 +100,12 @@ resource "aws_cognito_user_pool" "users" {
   }
 
   schema {
-    attribute_data_type = "String"
+    attribute_data_type      = "String"
     developer_only_attribute = false
-    mutable = true
-    name = "agreed_to_disclaimer"
-    required = false
+    mutable                  = true
+    name                     = "agreed_to_disclaimer"
+    required                 = false
+
     string_attribute_constraints {
       max_length = 5
       min_length = 4
@@ -108,11 +113,12 @@ resource "aws_cognito_user_pool" "users" {
   }
 
   schema {
-    attribute_data_type = "String"
+    attribute_data_type      = "String"
     developer_only_attribute = false
-    mutable = true
-    name = "phone_number"
-    required = true
+    mutable                  = true
+    name                     = "phone_number"
+    required                 = true
+
     string_attribute_constraints {
       max_length = 64
       min_length = 8
@@ -120,11 +126,12 @@ resource "aws_cognito_user_pool" "users" {
   }
 
   schema {
-    attribute_data_type = "String"
+    attribute_data_type      = "String"
     developer_only_attribute = false
-    mutable = true
-    name = "name"
-    required = true
+    mutable                  = true
+    name                     = "name"
+    required                 = true
+
     string_attribute_constraints {
       max_length = 64
       min_length = 2
@@ -132,11 +139,12 @@ resource "aws_cognito_user_pool" "users" {
   }
 
   schema {
-    attribute_data_type = "String"
+    attribute_data_type      = "String"
     developer_only_attribute = false
-    mutable = true
-    name = "email"
-    required = true
+    mutable                  = true
+    name                     = "email"
+    required                 = true
+
     string_attribute_constraints {
       max_length = 256
       min_length = 6
@@ -152,9 +160,9 @@ resource "aws_cognito_user_pool" "users" {
 }
 
 resource "aws_cognito_user_pool_client" "circles-mobile" {
-  name                                 = "circles-mobile"
-  refresh_token_validity  = 30
-  user_pool_id = "${aws_cognito_user_pool.users.id}"
+  name                   = "circles-mobile"
+  refresh_token_validity = 30
+  user_pool_id           = "${aws_cognito_user_pool.users.id}"
 
   read_attributes = [
     "given_name",
@@ -197,15 +205,15 @@ resource "aws_cognito_user_pool_client" "circles-mobile" {
     "gender",
     "updated_at",
     "nickname",
-    "email"
+    "email",
   ]
 }
 
 resource "aws_cognito_user_pool_client" "circles-api" {
-  name                    = "circles-api"
-  explicit_auth_flows     = ["ADMIN_NO_SRP_AUTH"]
-  refresh_token_validity  = 30
-  user_pool_id = "${aws_cognito_user_pool.users.id}"
+  name                   = "circles-api"
+  explicit_auth_flows    = ["ADMIN_NO_SRP_AUTH"]
+  refresh_token_validity = 30
+  user_pool_id           = "${aws_cognito_user_pool.users.id}"
 
   read_attributes = [
     "given_name",
@@ -228,7 +236,7 @@ resource "aws_cognito_user_pool_client" "circles-api" {
     "gender",
     "updated_at",
     "nickname",
-    "email"
+    "email",
   ]
 
   write_attributes = [
@@ -250,7 +258,7 @@ resource "aws_cognito_user_pool_client" "circles-api" {
     "gender",
     "updated_at",
     "nickname",
-    "email"
+    "email",
   ]
 }
 
@@ -298,17 +306,19 @@ EOF
 }
 
 resource "aws_cognito_user_group" "user" {
-  name         = "user"
-  description  = "A default user of circles"
-  precedence   = 0
+  name        = "user"
+  description = "A default user of circles"
+  precedence  = 0
+
   # role_arn     =
   user_pool_id = "${aws_cognito_user_pool.users.id}"
 }
 
 resource "aws_cognito_user_group" "test" {
-  name         = "test"
-  description  = "test user for integration and development"  
-  precedence   = 1
+  name        = "test"
+  description = "test user for integration and development"
+  precedence  = 1
+
   # role_arn     =
   user_pool_id = "${aws_cognito_user_pool.users.id}"
 }

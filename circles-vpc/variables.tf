@@ -20,13 +20,11 @@ variable "aws_region" {
   default     = "eu-central-1"
 }
 
-
 # variable "availability_zones" {
 #   description = "The AWS availability zones to create things in."
 #   type        = "list"
 #   default     = ["eu-central-1a", "eu-central-1b"]
 # }
-
 
 variable "team" {
   description = "Owner of resources."

@@ -19,6 +19,7 @@ data "aws_availability_zones" "default" {}
 
 data "terraform_remote_state" "circles_vpc" {
   backend = "s3"
+
   config {
     bucket         = "circles-vpc-terraform-state"
     region         = "eu-central-1"
@@ -27,7 +28,6 @@ data "terraform_remote_state" "circles_vpc" {
     encrypt        = true
   }
 }
-
 
 # data "aws_acm_certificate" "chat_joincircles" {
 #   domain   = "chat.joincircles.net"
@@ -79,7 +79,6 @@ resource "aws_subnet" "public" {
     )
   )}"
 }
-
 
 resource "aws_route_table" "default" {
   vpc_id = "${data.terraform_remote_state.circles_vpc.vpc_id}"
@@ -133,7 +132,7 @@ resource "aws_autoscaling_group" "chat" {
       key                 = "emergency)contact"
       value               = "${var.emergency_contact}"
       propagate_at_launch = true
-    }
+    },
   ]
 }
 
@@ -155,7 +154,8 @@ data "template_file" "cloud_config" {
 # }
 
 resource "aws_launch_configuration" "chat" {
-  security_groups             = ["${aws_security_group.instance_sg.id}"]
+  security_groups = ["${aws_security_group.instance_sg.id}"]
+
   # key_name                    = "${aws_key_pair.circles_chat.key_name}"
   image_id                    = "${data.aws_ami.stable_coreos.id}"            //"ami-10e6c8fb"
   instance_type               = "t2.small"
@@ -293,8 +293,9 @@ resource "aws_ecs_service" "chat" {
   depends_on = [
     "aws_iam_role_policy.ecs_service",
     "aws_alb_listener.chat_http",
-    // "aws_alb_listener.chat_https",
   ]
+
+  // "aws_alb_listener.chat_https",
 }
 
 ## IAM

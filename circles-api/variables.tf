@@ -53,7 +53,7 @@ variable "circles_api_github_oauth_token" {
 
 variable "rds_instance_identifier" {
   description = "The identifier for the rds instance"
-} 
+}
 
 variable "database_name" {
   description = "The name of the database"

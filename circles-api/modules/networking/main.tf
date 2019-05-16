@@ -1,9 +1,8 @@
-
 data "aws_availability_zones" "available" {}
 
 /* Elastic IP for NAT */
 resource "aws_eip" "network_eip" {
-  vpc        = true
+  vpc = true
 }
 
 /* NAT */
@@ -35,7 +34,6 @@ resource "aws_subnet" "public_subnet" {
   )}"
 }
 
-
 /* Private subnet */
 resource "aws_subnet" "private_subnet" {
   vpc_id                  = "${var.vpc_id}"
@@ -52,7 +50,6 @@ resource "aws_subnet" "private_subnet" {
   )}"
 }
 
-
 /* Routing table for private subnet */
 resource "aws_route_table" "private" {
   vpc_id = "${var.vpc_id}"
@@ -64,7 +61,6 @@ resource "aws_route_table" "private" {
     )
   )}"
 }
-
 
 /* Routing table for public subnet */
 resource "aws_route_table" "public" {
@@ -98,9 +94,9 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_route_table_association" "private" {
-  count           = "${length(var.private_subnets_cidr)}"
-  subnet_id       = "${element(aws_subnet.private_subnet.*.id, count.index)}"
-  route_table_id  = "${aws_route_table.private.id}"
+  count          = "${length(var.private_subnets_cidr)}"
+  subnet_id      = "${element(aws_subnet.private_subnet.*.id, count.index)}"
+  route_table_id = "${aws_route_table.private.id}"
 }
 
 /*====

@@ -17,7 +17,7 @@ provider "aws" {
 }
 
 resource "aws_lightsail_key_pair" "cafe" {
-  name   = "cafe-grundeinkommen-website-key"
+  name       = "cafe-grundeinkommen-website-key"
   public_key = "${file("ssh/cafe-grundeinkommen-website.pub")}"
 }
 

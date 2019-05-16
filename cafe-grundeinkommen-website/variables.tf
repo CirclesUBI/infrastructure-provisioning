@@ -15,9 +15,9 @@ variable "aws_account_id" {
 }
 
 variable "blueprint_id" {
-  description = "Blueprint for lightsail instance."  
+  description = "Blueprint for lightsail instance."
 }
 
 variable "instance_size" {
-  description = "Size of lightsail instance"  
+  description = "Size of lightsail instance"
 }

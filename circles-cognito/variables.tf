@@ -16,7 +16,7 @@ variable "secret_key" {
 }
 
 variable "region" {
-  description = "The AWS region to create the resources in."  
+  description = "The AWS region to create the resources in."
   default     = "eu-central-1"
 }
 
@@ -44,20 +44,14 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "password_policy_minimum_length" {
-}
+variable "password_policy_minimum_length" {}
 
-variable "password_policy_require_lowercase" {
-}
+variable "password_policy_require_lowercase" {}
 
-variable "password_policy_require_symbols" {
-}
+variable "password_policy_require_symbols" {}
 
-variable "password_policy_require_uppercase" {
-}
+variable "password_policy_require_uppercase" {}
 
-variable "password_policy_require_numbers" {
-}
+variable "password_policy_require_numbers" {}
 
-variable "sms_configuration_external_id" {
-}
+variable "sms_configuration_external_id" {}

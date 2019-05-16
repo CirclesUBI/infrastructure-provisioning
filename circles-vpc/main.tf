@@ -22,11 +22,11 @@ data "aws_availability_zones" "default" {}
 
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
+
   # IPv4 CIDR IP/CIDR	  Δ to last IP addr	  Mask	            Hosts(*)	Class
   # a.b.0.0/16	        +0.0.255.255	      255.255.000.000	  65,536	  256 C = 1 B
 
   enable_dns_hostnames = true
-
   tags = "${merge(
     local.common_tags,
     map(
@@ -34,7 +34,6 @@ resource "aws_vpc" "default" {
     )
   )}"
 }
-
 
 resource "aws_internet_gateway" "default" {
   vpc_id = "${aws_vpc.default.id}"

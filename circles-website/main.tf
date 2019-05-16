@@ -16,6 +16,7 @@ provider "aws" {
 
 data "terraform_remote_state" "circles_vpc" {
   backend = "s3"
+
   config {
     bucket         = "circles-vpc-terraform-state"
     region         = "eu-central-1"
@@ -30,7 +31,7 @@ resource "aws_s3_bucket" "joincircles.net" {
   acl    = "private"
 
   tags {
-    Name = "joincircles.net-bucket"
+    Name        = "joincircles.net-bucket"
     Environment = "dev"
   }
 }
@@ -80,7 +81,8 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
     forwarded_values {
       query_string = false
-      headers = ["Origin"]
+      headers      = ["Origin"]
+
       cookies {
         forward = "none"
       }
@@ -103,6 +105,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
     forwarded_values {
       query_string = false
+
       cookies {
         forward = "none"
       }
@@ -132,7 +135,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     cloudfront_default_certificate = true
   }
 }
-
 
 resource "aws_route53_zone" "joincircles.net" {
   name = "joincircles.net"

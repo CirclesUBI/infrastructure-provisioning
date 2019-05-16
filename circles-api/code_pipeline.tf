@@ -11,7 +11,7 @@ module "code_pipeline" {
   run_task_security_group_ids = ["${module.networking.security_groups_ids}", "${module.ecs.security_group_id}"] #"${module.rds.db_access_sg_id}", 
   github_oauth_token          = "${var.circles_api_github_oauth_token}"
   github_branch               = "master"
-  image_name                  = "${var.project}-ecr",
+  image_name                  = "${var.project}-ecr"
   database_name               = "${module.rds.db_name}"
   database_user               = "${module.rds.db_username}"
   database_host               = "${module.rds.db_host}"

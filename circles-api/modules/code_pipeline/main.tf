@@ -41,9 +41,9 @@ data "template_file" "codebuild_policy" {
 }
 
 resource "aws_iam_role_policy" "codebuild_policy" {
-  name        = "codebuild-policy"
-  role        = "${aws_iam_role.codebuild_role.id}"
-  policy      = "${data.template_file.codebuild_policy.rendered}"
+  name   = "codebuild-policy"
+  role   = "${aws_iam_role.codebuild_role.id}"
+  policy = "${data.template_file.codebuild_policy.rendered}"
 }
 
 data "template_file" "buildspec_test" {
@@ -58,30 +58,29 @@ data "template_file" "buildspec_build" {
   template = "${file("${path.module}/buildspec_build.yml")}"
 
   vars {
-    repository_url     = "${var.repository_url}"
-    region             = "${var.region}"
+    repository_url = "${var.repository_url}"
+    region         = "${var.region}"
   }
 }
-
 
 resource "aws_codebuild_project" "build" {
   name          = "${var.project}-build"
   build_timeout = "10"
   service_role  = "${aws_iam_role.codebuild_role.arn}"
+
   # badge_enabled  = true // InvalidInputException: Build badges are not supported for CodePipeline source
 
   artifacts {
     type = "CODEPIPELINE"
   }
-
   environment {
-    compute_type    = "BUILD_GENERAL1_SMALL"
+    compute_type = "BUILD_GENERAL1_SMALL"
+
     // https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html
     image           = "aws/codebuild/docker:17.09.0" #"aws/codebuild/docker:1.12.1"
     type            = "LINUX_CONTAINER"
     privileged_mode = true
   }
-
   source {
     type      = "CODEPIPELINE"
     buildspec = "${data.template_file.buildspec_build.rendered}"
@@ -92,17 +91,18 @@ resource "aws_codebuild_project" "test" {
   name          = "${var.project}-test"
   build_timeout = "15"
   service_role  = "${aws_iam_role.codebuild_role.arn}"
+
   # badge_enabled  = true // InvalidInputException: Build badges are not supported for CodePipeline source
 
   artifacts {
     type = "CODEPIPELINE"
   }
-
   environment {
-    compute_type    = "BUILD_GENERAL1_SMALL"
+    compute_type = "BUILD_GENERAL1_SMALL"
+
     // https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html
-    image           = "aws/codebuild/nodejs:10.1.0"
-    type            = "LINUX_CONTAINER"
+    image = "aws/codebuild/nodejs:10.1.0"
+    type  = "LINUX_CONTAINER"
 
     environment_variable {
       name  = "PGUSER"
@@ -153,7 +153,7 @@ resource "aws_codebuild_project" "test" {
       name  = "COGNITO_POOL_JWT_N"
       value = "${var.cognito_pool_jwt_n}"
     }
-    
+
     environment_variable {
       name  = "ANDROID_GCM_PLATFORM_ARN"
       value = "${var.android_platform_gcm_arn}"
@@ -179,7 +179,6 @@ resource "aws_codebuild_project" "test" {
       value = "${var.blockchain_network_id}"
     }
   }
-
   source {
     type      = "CODEPIPELINE"
     buildspec = "${data.template_file.buildspec_test.rendered}"

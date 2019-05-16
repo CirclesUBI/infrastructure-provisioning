@@ -1,11 +1,11 @@
 variable "common_tags" {
   description = "Common tags."
-  type = "map"
+  type        = "map"
 }
 
 variable "rds_instance_identifier" {
   description = "The identifier for the rds instance"
-} 
+}
 
 variable "database_name" {
   description = "The name of the database"
@@ -58,4 +58,3 @@ variable "project" {
   description = "Name of the project."
   default     = "circles"
 }
-

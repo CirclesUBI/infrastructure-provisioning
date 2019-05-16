@@ -1,6 +1,6 @@
 variable "common_tags" {
   description = "Common tags."
-  type = "map"
+  type        = "map"
 }
 
 variable "vpc_id" {
@@ -37,4 +37,3 @@ variable "availability_zones" {
   type        = "list"
   description = "The az that the resources will be launched"
 }
-

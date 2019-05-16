@@ -17,7 +17,7 @@ ECR repository to store our Docker images
 ======*/
 resource "aws_ecr_repository" "circles_api" {
   name = "${var.repository_name}"
-} 
+}
 
 /*====
 ECS cluster
@@ -35,21 +35,21 @@ data "template_file" "api_task" {
   template = "${file("${path.module}/tasks/api_task_definition.json")}"
 
   vars {
-    image                     = "${aws_ecr_repository.circles_api.repository_url}"  
-    log_group_name            = "${aws_cloudwatch_log_group.circles_api.name}"
-    log_group_region          = "${var.region}"
-    cognito_pool_id           = "${var.cognito_pool_id}" 
-    region                    = "${var.region}"
-    database_name             = "${var.database_name}"
-    database_user             = "${var.database_user}"
-    database_host             = "${var.database_host}"
-    database_password         = "${var.database_password}"
-    database_port             = "${var.database_port}" 
-    android_platform_gcm_arn  = "${var.android_platform_gcm_arn}"
-    cognito_pool_jwt_kid      = "${var.cognito_pool_jwt_kid}"
-    cognito_pool_jwt_n        = "${var.cognito_pool_jwt_n}"
-    private_key               = "${var.private_key}"
-    blockchain_network_id     = "${var.blockchain_network_id}"
+    image                    = "${aws_ecr_repository.circles_api.repository_url}"
+    log_group_name           = "${aws_cloudwatch_log_group.circles_api.name}"
+    log_group_region         = "${var.region}"
+    cognito_pool_id          = "${var.cognito_pool_id}"
+    region                   = "${var.region}"
+    database_name            = "${var.database_name}"
+    database_user            = "${var.database_user}"
+    database_host            = "${var.database_host}"
+    database_password        = "${var.database_password}"
+    database_port            = "${var.database_port}"
+    android_platform_gcm_arn = "${var.android_platform_gcm_arn}"
+    cognito_pool_jwt_kid     = "${var.cognito_pool_jwt_kid}"
+    cognito_pool_jwt_n       = "${var.cognito_pool_jwt_n}"
+    private_key              = "${var.private_key}"
+    blockchain_network_id    = "${var.blockchain_network_id}"
   }
 }
 
@@ -98,7 +98,7 @@ resource "aws_security_group" "ecs_service" {
 
 /* Simply specify the family to find the latest ACTIVE revision in that family */
 data "aws_ecs_task_definition" "circles_api" {
-  depends_on = [ "aws_ecs_task_definition.circles_api" ]
+  depends_on      = ["aws_ecs_task_definition.circles_api"]
   task_definition = "${aws_ecs_task_definition.circles_api.family}"
 }
 
@@ -132,10 +132,10 @@ resource "random_id" "target_group_sufix" {
 }
 
 resource "aws_alb_target_group" "circles_api" {
-  name     = "${var.project}-${var.environment}-alb-tg"
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = "${var.vpc_id}"
+  name        = "${var.project}-${var.environment}-alb-tg"
+  port        = 8080
+  protocol    = "HTTP"
+  vpc_id      = "${var.vpc_id}"
   target_type = "ip"
 
   lifecycle {
@@ -190,6 +190,7 @@ resource "aws_alb" "circles_api" {
     )
   )}"
 }
+
 resource "aws_alb_listener" "circles_api_http" {
   load_balancer_arn = "${aws_alb.circles_api.arn}"
   port              = "80"
@@ -211,7 +212,6 @@ resource "aws_alb_listener" "circles_api_http" {
   # }
 }
 
-
 resource "aws_alb_listener" "circles_api_https" {
   load_balancer_arn = "${aws_alb.circles_api.arn}"
   port              = "443"
@@ -231,10 +231,11 @@ resource "aws_alb_listener" "circles_api_https" {
 */
 data "aws_iam_policy_document" "ecs_service_role" {
   statement {
-    effect = "Allow"
+    effect  = "Allow"
     actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["ecs.amazonaws.com"]
     }
   }
@@ -247,21 +248,23 @@ resource "aws_iam_role" "ecs_role" {
 
 data "aws_iam_policy_document" "ecs_service_policy" {
   statement {
-    effect = "Allow"
+    effect    = "Allow"
     resources = ["*"]
+
     actions = [
       "elasticloadbalancing:Describe*",
       "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
       "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
       "ec2:Describe*",
-      "ec2:AuthorizeSecurityGroupIngress"
+      "ec2:AuthorizeSecurityGroupIngress",
     ]
   }
 }
 
 /* ecs service scheduler role */
 resource "aws_iam_role_policy" "ecs_service_role_policy" {
-  name   = "ecs_service_role_policy"
+  name = "ecs_service_role_policy"
+
   #policy = "${file("${path.module}/policies/ecs-service-role.json")}"
   policy = "${data.aws_iam_policy_document.ecs_service_policy.json}"
   role   = "${aws_iam_role.ecs_role.id}"
@@ -272,6 +275,7 @@ resource "aws_iam_role" "ecs_execution_role" {
   name               = "ecs_task_execution_role"
   assume_role_policy = "${file("${path.module}/policies/ecs-task-execution-role.json")}"
 }
+
 resource "aws_iam_role_policy" "ecs_execution_role_policy" {
   name   = "ecs_execution_role_policy"
   policy = "${file("${path.module}/policies/ecs-execution-role-policy.json")}"
@@ -311,6 +315,7 @@ resource "aws_iam_role" "ecs_autoscale_role" {
   name               = "${var.project}-ecs-autoscale-role"
   assume_role_policy = "${file("${path.module}/policies/ecs-autoscale-role.json")}"
 }
+
 resource "aws_iam_role_policy" "ecs_autoscale_role_policy" {
   name   = "${var.project}-ecs-autoscale-role-policy"
   policy = "${file("${path.module}/policies/ecs-autoscale-role-policy.json")}"
@@ -327,11 +332,10 @@ resource "aws_appautoscaling_target" "circles_api" {
 }
 
 resource "aws_appautoscaling_policy" "up" {
-  name                    = "${var.project}-scale-up"
-  service_namespace       = "ecs"
-  resource_id             = "service/${aws_ecs_cluster.circles_api.name}/${aws_ecs_service.circles_api.name}"
-  scalable_dimension      = "ecs:service:DesiredCount"
-
+  name               = "${var.project}-scale-up"
+  service_namespace  = "ecs"
+  resource_id        = "service/${aws_ecs_cluster.circles_api.name}/${aws_ecs_service.circles_api.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
 
   step_scaling_policy_configuration {
     adjustment_type         = "ChangeInCapacity"
@@ -340,7 +344,7 @@ resource "aws_appautoscaling_policy" "up" {
 
     step_adjustment {
       metric_interval_lower_bound = 0
-      scaling_adjustment = 1
+      scaling_adjustment          = 1
     }
   }
 
@@ -348,10 +352,10 @@ resource "aws_appautoscaling_policy" "up" {
 }
 
 resource "aws_appautoscaling_policy" "down" {
-  name                    = "${var.project}-scale-down"
-  service_namespace       = "ecs"
-  resource_id             = "service/${aws_ecs_cluster.circles_api.name}/${aws_ecs_service.circles_api.name}"
-  scalable_dimension      = "ecs:service:DesiredCount"
+  name               = "${var.project}-scale-down"
+  service_namespace  = "ecs"
+  resource_id        = "service/${aws_ecs_cluster.circles_api.name}/${aws_ecs_service.circles_api.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
 
   step_scaling_policy_configuration {
     adjustment_type         = "ChangeInCapacity"
@@ -360,7 +364,7 @@ resource "aws_appautoscaling_policy" "down" {
 
     step_adjustment {
       metric_interval_lower_bound = 0
-      scaling_adjustment = -1
+      scaling_adjustment          = -1
     }
   }
 

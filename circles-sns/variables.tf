@@ -7,7 +7,7 @@ variable "secret_key" {
 }
 
 variable "region" {
-  description = "The AWS region to create the resources in."  
+  description = "The AWS region to create the resources in."
   default     = "eu-central-1"
 }
 
@@ -34,6 +34,8 @@ variable "gcm_key" {
 #   description = "Apple Push Notification Service key."
 # }
 
+
 # variable "apns_cert" {
 #   description = "Apple Push Notification Service certificate."
 # }
+

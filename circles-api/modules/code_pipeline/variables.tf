@@ -47,7 +47,6 @@ variable "github_branch" {
   description = "The github branch to pull code from"
 }
 
-
 variable "database_name" {
   description = "Database name for the api"
 }

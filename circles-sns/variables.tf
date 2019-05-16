@@ -1,3 +1,4 @@
+### AWS
 variable "access_key" {
   description = "AWS access key"
 }
@@ -6,18 +7,39 @@ variable "secret_key" {
   description = "AWS secret access key"
 }
 
+variable "aws_account_id" {
+  description = "AWS Account ID."
+}
+
 variable "aws_region" {
   description = "The AWS region to create the resources in."
 }
 
-variable "aws_account_id" {
-  description = "AWS Account ID."
+### GCM
+
+variable "gcm_key" {
+  description = "Google Cloud Mesaging key."
+}
+
+### Common Tags
+
+locals {
+  common_tags = {
+    team              = "${var.team}"
+    project           = "${var.project}"
+    environment       = "${var.environment}"
+    emergency_contact = "${var.emergency_contact}"
+  }
+}
+
+variable "team" {
+  description = "Owner of resources."
   default     = "circles"
 }
 
 variable "project" {
-  description = "Project name."
-  default     = "circles-sns"
+  description = "Name of project."
+  default     = "circles-vpc"
 }
 
 variable "environment" {
@@ -25,16 +47,6 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "gcm_key" {
-  description = "Google Cloud Mesaging key."
+variable "emergency_contact" {
+  description = "Who to contact in an emergency."
 }
-
-# variable "apns_key" {
-#   description = "Apple Push Notification Service key."
-# }
-
-
-# variable "apns_cert" {
-#   description = "Apple Push Notification Service certificate."
-# }
-

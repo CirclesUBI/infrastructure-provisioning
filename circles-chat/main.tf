@@ -267,6 +267,7 @@ data "template_file" "chat_task_definition" {
     smtp_host            = "${var.smtp_host}"
     smtp_username        = "${var.smtp_username}"
     smtp_password        = "${var.smtp_password}"
+    rocketchat_url       = "https://chat.joincircles.net"
   }
 }
 
@@ -286,7 +287,7 @@ resource "aws_ecs_service" "chat" {
 
   load_balancer {
     target_group_arn = "${aws_alb_target_group.chat.id}"
-    container_name   = "chat"
+    container_name   = "rocketchat"
     container_port   = "3000"
   }
 

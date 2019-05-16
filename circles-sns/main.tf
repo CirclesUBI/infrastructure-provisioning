@@ -27,12 +27,17 @@ resource "aws_sns_platform_application" "gcm_application" {
   platform_credential = "${var.gcm_key}"
 }
 
-# resource "aws_sns_platform_application" "apns_application" {
-#   name                = "apns_application"
-#   platform            = "APNS"
-#   platform_credential = "${var.apns_key}"
-#   platform_principal  = "${var.apns_cert}"
-# }
+resource "aws_s3_bucket" "sms_logs" {
+  bucket = "circles-sns-sms-logs"
+  acl    = "private"
+
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "sns-sms-delivery-logs"
+    )
+  )}"
+}
 
 module "sms" {
   source = "./modules/sms"
@@ -42,10 +47,10 @@ module "sms" {
   }
 
   delivery_status_iam_role_arn = "${aws_iam_role.sns_sms_feedback.arn}"
-  sms_log_bucket               = "circles-sns-sms-daily-usage"
+  sms_log_bucket               = "${aws_s3_bucket.sms_logs.id}"
 }
 
-# notifs
+# notifications
 resource "aws_sns_topic" "transfer" {
   name = "${var.project}-transfer-topic"
 }
@@ -91,55 +96,7 @@ data "aws_iam_policy_document" "sns_transfer" {
   }
 }
 
-# SQS Stuff
-
-# resource "aws_sqs_queue" "transfer" {
-#   name = "${var.project}-q-transfer"
-
-#   tags {
-#     Environment = "${var.environment}"
-#     Name        = "${var.project}-logs"
-#     Project     = "${var.project}"
-#   }
-# }
-
-# resource "aws_sqs_queue_policy" "transfer" {
-#   queue_url = "${aws_sqs_queue.transfer.id}"
-#   policy = "${data.aws_iam_policy_document.sqs_transfer.json}"
-# }
-
-# data "aws_iam_policy_document" "sqs_transfer" {
-#   policy_id = "${var.project}-sqs-transfer"
-#   statement {
-#     actions = [
-#       "sqs:SendMessage",
-#     ]
-#     condition {
-#       test = "ArnEquals"
-#       variable = "aws:SourceArn"
-
-#       values = [
-#         "${aws_sns_topic.transfer.arn}",
-#       ]
-#     }
-#     effect = "Allow"
-#     principals {
-#       type = "AWS"
-#       identifiers = [
-#         "*"]
-#     }
-#     resources = [
-#       "${aws_sqs_queue.transfer.arn}",
-#     ]
-#     sid = "${var.project}-sqs-transfer"
-#   }
-# }
-
-# resource "aws_sns_topic_subscription" "sqs_transfer" {
-#   topic_arn = "${aws_sns_topic.transfer.arn}"
-#   protocol  = "sqs"
-#   endpoint  = "${aws_sqs_queue.transfer.arn}"
-# }
+### IAM
 
 resource "aws_iam_role" "sns_sms_feedback" {
   name = "${var.project}-sms-feedback"
@@ -155,7 +112,7 @@ resource "aws_iam_role" "sns_sms_feedback" {
       },
       "Action":"sts:AssumeRole"
     }
-  ]  
+  ]
 }
 POLICY
 }

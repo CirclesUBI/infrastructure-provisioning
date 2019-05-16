@@ -1,8 +1,8 @@
 locals {
   common_tags = {
-    team              = "circles"
-    project           = "circles-api"
-    environment       = "dev"
+    team              = "${var.team}"
+    project           = "${var.project}"
+    environment       = "${var.environment}"
     emergency_contact = "${var.emergency_contact}"
   }
 }
@@ -17,7 +17,6 @@ variable "secret_key" {
 
 variable "aws_region" {
   description = "The AWS region to create things in."
-  default     = "eu-central-1"
 }
 
 variable "aws_account_id" {
@@ -46,10 +45,6 @@ variable "emergency_contact" {
 variable "app_version" {
   description = "App Version."
   default     = "1.0.0"
-}
-
-variable "availability_zones" {
-  default = ["eu-central-1a", "eu-central-1b"]
 }
 
 variable "circles_api_github_oauth_token" {

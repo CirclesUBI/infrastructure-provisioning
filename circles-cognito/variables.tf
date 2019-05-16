@@ -1,9 +1,9 @@
 locals {
   common_tags = {
-    team              = "circles"
-    project           = "circles-chat"
-    environment       = "dev"
-    emergency_contact = "Ed: +4917643698891"
+    team              = "${var.team}"
+    project           = "${var.project}"
+    environment       = "${var.environment}"
+    emergency_contact = "${var.emergency_contact}"
   }
 }
 
@@ -15,9 +15,8 @@ variable "secret_key" {
   description = "AWS secret access key"
 }
 
-variable "region" {
+variable "aws_region" {
   description = "The AWS region to create the resources in."
-  default     = "eu-central-1"
 }
 
 variable "aws_account_id" {
@@ -31,12 +30,11 @@ variable "team" {
 
 variable "project" {
   description = "Project name."
-  default     = "circles"
+  default     = "circles-cognito"
 }
 
 variable "emergency_contact" {
   description = "Who to call if there is an emergency."
-  default     = "circles-api"
 }
 
 variable "environment" {

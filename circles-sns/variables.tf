@@ -6,9 +6,8 @@ variable "secret_key" {
   description = "AWS secret access key"
 }
 
-variable "region" {
+variable "aws_region" {
   description = "The AWS region to create the resources in."
-  default     = "eu-central-1"
 }
 
 variable "aws_account_id" {
@@ -18,7 +17,7 @@ variable "aws_account_id" {
 
 variable "project" {
   description = "Project name."
-  default     = "circles"
+  default     = "circles-sns"
 }
 
 variable "environment" {

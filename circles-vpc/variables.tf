@@ -47,6 +47,10 @@ variable "emergency_contact" {
   description = "Who to contact in an emergency."
 }
 
+variable "aws_account_id" {
+  description = "The AWS account ID."
+}
+
 variable "az_count" {
   description = "Number of AZs to cover in a given AWS region"
   default     = "2"

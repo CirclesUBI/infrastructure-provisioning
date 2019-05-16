@@ -3,7 +3,7 @@ locals {
     team              = "circles"
     project           = "circles-api"
     environment       = "dev"
-    emergency_contact = "Ed: +4917643698891"
+    emergency_contact = "${var.emergency_contact}"
   }
 }
 
@@ -41,7 +41,6 @@ variable "environment" {
 
 variable "emergency_contact" {
   description = "Who to call if there is an emergency."
-  default     = "circles-api"
 }
 
 variable "app_version" {

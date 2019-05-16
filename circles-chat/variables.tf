@@ -36,7 +36,7 @@ variable "project" {
 
 variable "emergency_contact" {
   description = "Who to call if there is an emergency."
-  default     = "circles-api"
+  default     = "Ed: +4917643698891"
 }
 
 variable "environment" {

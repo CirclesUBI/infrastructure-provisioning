@@ -9,9 +9,10 @@ terraform {
 }
 
 provider "aws" {
-  access_key = "${var.access_key}"
-  secret_key = "${var.secret_key}"
-  region     = "${var.aws_region}"
+  access_key          = "${var.access_key}"
+  secret_key          = "${var.secret_key}"
+  region              = "${var.aws_region}"
+  allowed_account_ids = ["${var.aws_account_id}"]
 }
 
 data "terraform_remote_state" "circles_vpc" {
@@ -26,32 +27,41 @@ data "terraform_remote_state" "circles_vpc" {
   }
 }
 
-resource "aws_s3_bucket" "joincircles.net" {
-  bucket = "joincircles.net"
+resource "aws_s3_bucket" "circles_website" {
+  bucket = "${var.website_domain}"
   acl    = "private"
 
-  tags {
-    Name        = "joincircles.net-bucket"
-    Environment = "dev"
-  }
+  # website {
+  #   index_document = "${var.bucket_index_document}"
+  #   error_document = "${var.bucket_error_document}"
+  # }
+
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.website_domain}"
+    )
+  )}"
 }
 
 locals {
-  s3_origin_id = "S3-www.joincircles.net" // located in the console at: CloudFront Distributions > E12VI3U7WIL23J
+  s3_origin_id = "S3-www.${var.website_domain}" // located in the console at: CloudFront Distributions > E12VI3U7WIL23J
 }
 
-resource "aws_cloudfront_distribution" "s3_distribution" {
+resource "aws_cloudfront_distribution" "circles_website" {
+  enabled         = true
+  is_ipv6_enabled = true
+
   origin {
-    domain_name = "joincircles.net"
+    domain_name = "${aws_s3_bucket.circles_website.bucket_domain_name}"
     origin_id   = "${local.s3_origin_id}"
   }
 
-  enabled             = true
-  is_ipv6_enabled     = true
-  comment             = "Managed by Terraform"
-  default_root_object = "index.html"
-
-  aliases = ["joincircles.net", "www.joincircles.net"]
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "POST"]
@@ -59,51 +69,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     target_origin_id = "${local.s3_origin_id}"
 
     forwarded_values {
-      query_string = false // todo: do we need query strings?
-
-      cookies {
-        forward = "none"
-      }
-    }
-
-    viewer_protocol_policy = "allow-all"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
-  }
-
-  # Cache behavior with precedence 0
-  ordered_cache_behavior {
-    path_pattern     = "/content/immutable/*"
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = "${local.s3_origin_id}"
-
-    forwarded_values {
-      query_string = false
-      headers      = ["Origin"]
-
-      cookies {
-        forward = "none"
-      }
-    }
-
-    min_ttl                = 0
-    default_ttl            = 86400
-    max_ttl                = 31536000
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
-  }
-
-  # Cache behavior with precedence 1
-  // todo: probably don't need this
-  ordered_cache_behavior {
-    path_pattern     = "/content/*"
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "${local.s3_origin_id}"
-
-    forwarded_values {
       query_string = false
 
       cookies {
@@ -111,39 +76,53 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
       }
     }
 
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
-    compress               = true
     viewer_protocol_policy = "redirect-to-https"
-  }
-
-  price_class = "PriceClass_200"
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "whitelist"
-      locations        = ["US", "CA", "GB", "DE"]
-    }
-  }
-
-  tags {
-    Environment = "production"
+    min_ttl                = 0
+    default_ttl            = 7200
+    max_ttl                = 86400
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn = "${data.aws_acm_certificate.circles_website.arn}"
   }
 }
 
-resource "aws_route53_zone" "joincircles.net" {
-  name = "joincircles.net"
+# DNS / SSL
+
+resource "aws_acm_certificate" "circles_website" {
+  domain_name               = "${var.website_domain}"
+  subject_alternative_names = ["${var.website_domain}", "www.${var.website_domain}"]
+  validation_method         = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.website_domain}-acm-cert"
+    )
+  )}"
 }
 
-resource "aws_route53_record" "joincircles.net" {
+resource "aws_route53_record" "circles_website" {
+  name    = "${aws_acm_certificate.circles_website.domain_validation_options.0.resource_record_name}"
+  type    = "${aws_acm_certificate.circles_website.domain_validation_options.0.resource_record_type}"
   zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
-  name    = "joincircles.net"
+  records = ["${aws_acm_certificate.circles_website.domain_validation_options.0.resource_record_value}"]
+  ttl     = 60
+}
+
+resource "aws_acm_certificate_validation" "circles_website" {
+  certificate_arn         = "${aws_acm_certificate.circles_website.arn}"
+  validation_record_fqdns = ["${aws_route53_record.circles_website.fqdn}"]
+}
+
+resource "aws_route53_record" "circles_website" {
+  zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
+  name    = "${var.website_domain}"
   type    = "A"
   ttl     = "300"
-  records = ["dhlz1fm91p6pq.cloudfront.net"]
+  records = ["${aws_cloudfront_distribution.circles_website.domain_name}"]
 }

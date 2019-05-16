@@ -1,3 +1,14 @@
+### Authenticate
+
+provider "aws" {
+  access_key          = "${var.access_key}"
+  secret_key          = "${var.secret_key}"
+  region              = "${var.aws_region}"
+  allowed_account_ids = ["${var.aws_account_id}"]
+}
+
+### State
+
 terraform {
   backend "s3" {
     bucket         = "circles-vpc-terraform-state"
@@ -8,15 +19,24 @@ terraform {
   }
 }
 
-# AWS
-provider "aws" {
-  access_key          = "${var.access_key}"
-  secret_key          = "${var.secret_key}"
-  region              = "${var.aws_region}"
-  allowed_account_ids = ["${var.aws_account_id}"]
+### Domains
+
+resource "aws_route53_zone" "joincircles" {
+  name = "joincircles.net"
+
+  lifecycle = {
+    prevent_destroy = true
+  }
+
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "joincircles.net"
+    )
+  )}"
 }
 
-### Network
+### VPC
 
 data "aws_availability_zones" "default" {}
 

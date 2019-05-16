@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket         = "circles-sns-terraform"
+    bucket         = "circles-sns-terraform-state"
     region         = "eu-central-1"
     key            = "circles-sns-terraform.tfstate"
     dynamodb_table = "circles-sns-terraform"
@@ -9,9 +9,10 @@ terraform {
 }
 
 provider "aws" {
-  access_key = "${var.access_key}"
-  secret_key = "${var.secret_key}"
-  region     = "${var.region}"
+  access_key          = "${var.access_key}"
+  secret_key          = "${var.secret_key}"
+  region              = "${var.region}"
+  allowed_account_ids = ["${var.aws_account_id}"]
 }
 
 # Additional provider configuration SMS (not available in Frankfurt)
@@ -21,7 +22,7 @@ provider "aws" {
 }
 
 resource "aws_sns_platform_application" "gcm_application" {
-  name                = "${var.project_prefix}-gcm-app"
+  name                = "${var.project}-gcm-app"
   platform            = "GCM"
   platform_credential = "${var.gcm_key}"
 }
@@ -42,7 +43,7 @@ module "sms" {
 
 # notifs
 resource "aws_sns_topic" "transfer" {
-  name = "${var.project_prefix}-transfer-topic"
+  name = "${var.project}-transfer-topic"
 }
 
 resource "aws_sns_topic_policy" "transfer" {
@@ -52,7 +53,7 @@ resource "aws_sns_topic_policy" "transfer" {
 }
 
 data "aws_iam_policy_document" "sns_transfer" {
-  policy_id = "${var.project_prefix}-sns-transfer"
+  policy_id = "${var.project}-sns-transfer"
   statement {
     actions = [
       "SNS:Publish",
@@ -74,18 +75,18 @@ data "aws_iam_policy_document" "sns_transfer" {
     resources = [
       "${aws_sns_topic.transfer.arn}",
     ]
-    sid = "${var.project_prefix}-transfer"
+    sid = "${var.project}-transfer"
   }
 }
 
 # SQS Stuff
 
 # resource "aws_sqs_queue" "transfer" {
-#   name = "${var.project_prefix}-q-transfer"
+#   name = "${var.project}-q-transfer"
 
 #   tags {
 #     Environment = "${var.environment}"
-#     Name        = "${var.project_prefix}-logs"
+#     Name        = "${var.project}-logs"
 #     Project     = "${var.project}"
 #   }
 # }
@@ -96,7 +97,7 @@ data "aws_iam_policy_document" "sns_transfer" {
 # }
 
 # data "aws_iam_policy_document" "sqs_transfer" {
-#   policy_id = "${var.project_prefix}-sqs-transfer"
+#   policy_id = "${var.project}-sqs-transfer"
 #   statement {
 #     actions = [
 #       "sqs:SendMessage",
@@ -118,7 +119,7 @@ data "aws_iam_policy_document" "sns_transfer" {
 #     resources = [
 #       "${aws_sqs_queue.transfer.arn}",
 #     ]
-#     sid = "${var.project_prefix}-sqs-transfer"
+#     sid = "${var.project}-sqs-transfer"
 #   }
 # }
 
@@ -129,7 +130,7 @@ data "aws_iam_policy_document" "sns_transfer" {
 # }
 
 resource "aws_iam_role" "sns_sms_feedback" {
-  name = "${var.project_prefix}-sms-feedback"
+  name = "${var.project}-sms-feedback"
 
   assume_role_policy = <<POLICY
 {
@@ -148,7 +149,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "sns_sms_feedback" {
-  name = "${var.project_prefix}-sms-policy"
+  name = "${var.project}-sms-policy"
   role = "${aws_iam_role.sns_sms_feedback.id}"
 
   policy = <<EOF

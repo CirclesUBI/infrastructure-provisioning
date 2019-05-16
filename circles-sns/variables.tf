@@ -11,14 +11,14 @@ variable "region" {
   default     = "eu-central-1"
 }
 
-variable "project" {
-  description = "Project name."
+variable "aws_account_id" {
+  description = "AWS Account ID."
   default     = "circles"
 }
 
-variable "project_prefix" {
-  description = "Name prefix for resources."
-  default     = "circles-sns"
+variable "project" {
+  description = "Project name."
+  default     = "circles"
 }
 
 variable "environment" {

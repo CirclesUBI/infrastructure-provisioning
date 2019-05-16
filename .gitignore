@@ -21,3 +21,6 @@
 # temp
 rocketchat/
 cognito/
+
+# Secrets
+**/*.kdbx

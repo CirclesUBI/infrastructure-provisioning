@@ -9,40 +9,41 @@ terraform {
 }
 
 provider "aws" {
-  access_key = "${var.access_key}"
-  secret_key = "${var.secret_key}"
-  region     = "${var.region}"
+  access_key          = "${var.access_key}"
+  secret_key          = "${var.secret_key}"
+  region              = "${var.region}"
+  allowed_account_ids = ["${var.aws_account_id}"]
 }
 
 resource "aws_cognito_user_pool" "users" {
   name = "circles-mobile-userpool"
-  email_verification_subject = "Your Circles verification code"
-  email_verification_message = "Your Circles verification code is {####}. "
-  sms_authentication_message = "Your Circles authentication code is {####}. "  
-  sms_verification_message = "Your Circles verification code is {####}. "
-  username_attributes = ["phone_number"]
-  auto_verified_attributes = ["email"]
-  mfa_configuration = "OPTIONAL"
+  email_verification_subject  = "Your Circles verification code"
+  email_verification_message  = "Your Circles verification code is {####}. "
+  sms_authentication_message  = "Your Circles authentication code is {####}. "  
+  sms_verification_message    = "Your Circles verification code is {####}. "
+  username_attributes         = ["phone_number"]
+  auto_verified_attributes    = ["email"]
+  mfa_configuration           = "OPTIONAL"
 
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
   }
 
   password_policy {
-    minimum_length = "${var.password_policy_minimum_length}"
+    minimum_length    = "${var.password_policy_minimum_length}"
     require_lowercase = "${var.password_policy_require_lowercase}"
-    require_numbers = "${var.password_policy_require_numbers}"
-    require_symbols = "${var.password_policy_require_symbols}"
+    require_numbers   = "${var.password_policy_require_numbers}"
+    require_symbols   = "${var.password_policy_require_symbols}"
     require_uppercase = "${var.password_policy_require_uppercase}"
   }
 
   sms_configuration {
-    external_id = "${var.sms_configuration_external_id}" 
-    sns_caller_arn = "${aws_iam_role.cidp_sms.arn}"
+    external_id     = "${var.sms_configuration_external_id}" 
+    sns_caller_arn  = "${aws_iam_role.cidp_sms.arn}"
   }
   
   device_configuration {
-    challenge_required_on_new_device = false
+    challenge_required_on_new_device      = false
     device_only_remembered_on_user_prompt = false
   }
 
@@ -94,7 +95,7 @@ resource "aws_cognito_user_pool" "users" {
     }
   }
 
-    schema {
+  schema {
     attribute_data_type = "String"
     developer_only_attribute = false
     mutable = true
@@ -142,11 +143,12 @@ resource "aws_cognito_user_pool" "users" {
     }
   }
 
-  tags {    
-    Environment = "${var.environment}"
-    Name        = "circles-mobile-userpool"
-    Project     = "${var.project}"    
-  }
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "name", "${var.team}-userpool"
+    )
+  )}"
 }
 
 resource "aws_cognito_user_pool_client" "circles-mobile" {

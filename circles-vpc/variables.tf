@@ -17,14 +17,7 @@ variable "secret_key" {
 
 variable "aws_region" {
   description = "The AWS region to create things in."
-  default     = "eu-central-1"
 }
-
-# variable "availability_zones" {
-#   description = "The AWS availability zones to create things in."
-#   type        = "list"
-#   default     = ["eu-central-1a", "eu-central-1b"]
-# }
 
 variable "team" {
   description = "Owner of resources."

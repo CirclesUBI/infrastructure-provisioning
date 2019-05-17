@@ -29,11 +29,6 @@ data "terraform_remote_state" "circles_vpc" {
   }
 }
 
-# data "aws_acm_certificate" "chat_joincircles" {
-#   domain   = "chat.joincircles.net"
-#   statuses = ["ISSUED"]
-# }
-
 ## EC2
 data "aws_ami" "stable_coreos" {
   most_recent = true
@@ -267,7 +262,7 @@ data "template_file" "chat_task_definition" {
     smtp_host            = "${var.smtp_host}"
     smtp_username        = "${var.smtp_username}"
     smtp_password        = "${var.smtp_password}"
-    rocketchat_url       = "https://chat.joincircles.net"
+    rocketchat_url       = "chat.joincircles.net"
   }
 }
 
@@ -424,19 +419,6 @@ resource "aws_alb" "chat" {
   )}"
 }
 
-# resource "aws_alb_listener" "chat" {
-#   load_balancer_arn = "${aws_alb.chat.id}"
-#   port              = "443"
-#   protocol          = "HTTPS"
-#   ssl_policy        = "ELBSecurityPolicy-2016-08"
-#   certificate_arn   = "${data.aws_acm_certificate.chat_joincircles.arn}"
-
-#   default_action {
-#     target_group_arn = "${aws_alb_target_group.chat.id}"
-#     type             = "forward"
-#   }
-# }
-
 resource "aws_alb_listener" "chat_http" {
   load_balancer_arn = "${aws_alb.chat.id}"
   port              = "80"
@@ -448,16 +430,51 @@ resource "aws_alb_listener" "chat_http" {
   }
 }
 
-# resource "aws_alb_listener" "chat_https" {
-#   load_balancer_arn = "${aws_alb.chat.id}"
-#   port              = "443"
-#   protocol          = "HTTPS"
-#   ssl_policy        = "ELBSecurityPolicy-2016-08"
-#   certificate_arn   = "${data.aws_acm_certificate.chat_joincircles.arn}"
+resource "aws_acm_certificate" "cert" {
+  domain_name       = "chat.joincircles.net."
+  validation_method = "DNS"
+}
 
-#   default_action {
-#     target_group_arn = "${aws_alb_target_group.chat.id}"
-#     type             = "forward"
+data "aws_route53_zone" "zone" {
+  name         = "joincircles.net."
+  private_zone = false
+}
+
+resource "aws_route53_record" "cert_validation" {
+  name    = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
+  type    = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
+  zone_id = "${data.aws_route53_zone.zone.id}"
+  records = ["${aws_acm_certificate.cert.domain_validation_options.0.resource_record_value}"]
+  ttl     = 60
+}
+
+resource "aws_acm_certificate_validation" "cert" {
+  certificate_arn         = "${aws_acm_certificate.cert.arn}"
+  validation_record_fqdns = ["${aws_route53_record.cert_validation.fqdn}"]
+}
+
+resource "aws_alb_listener" "chat_https" {
+  load_balancer_arn = "${aws_alb.chat.id}"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${aws_acm_certificate.cert.arn}"
+
+  default_action {
+    target_group_arn = "${aws_alb_target_group.chat.id}"
+    type             = "forward"
+  }
+}
+
+# resource "aws_route53_record" "www" {
+#   zone_id = "${data.aws_route53_zone.zone.zone_id}"
+#   name    = "chat.example.com"
+#   type    = "A"
+
+#   alias {
+#     name                   = "${aws_alb.chat.dns_name}"
+#     zone_id                = "${aws_alb.chat.zone_id}"
+#     evaluate_target_health = true
 #   }
 # }
 

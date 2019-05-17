@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "circles_api" {
-  bucket        = "${var.project}"
+  bucket        = "${var.project}-artifact-store"
   acl           = "private"
   force_destroy = true
 }

@@ -52,7 +52,7 @@ data "terraform_remote_state" "circles_sns" {
 }
 
 resource "aws_acm_certificate" "cert" {
-  domain_name       = "api.joincircles.net"
+  domain_name       = "api.joincircles.net."
   validation_method = "DNS"
 }
 

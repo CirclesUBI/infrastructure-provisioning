@@ -425,6 +425,24 @@ resource "aws_alb_listener" "chat_http" {
   protocol          = "HTTP"
 
   default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+resource "aws_alb_listener" "chat_https" {
+  load_balancer_arn = "${aws_alb.chat.id}"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${aws_acm_certificate.cert.arn}"
+
+  default_action {
     target_group_arn = "${aws_alb_target_group.chat.id}"
     type             = "forward"
   }
@@ -451,19 +469,6 @@ resource "aws_route53_record" "cert_validation" {
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn         = "${aws_acm_certificate.cert.arn}"
   validation_record_fqdns = ["${aws_route53_record.cert_validation.fqdn}"]
-}
-
-resource "aws_alb_listener" "chat_https" {
-  load_balancer_arn = "${aws_alb.chat.id}"
-  port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = "${aws_acm_certificate.cert.arn}"
-
-  default_action {
-    target_group_arn = "${aws_alb_target_group.chat.id}"
-    type             = "forward"
-  }
 }
 
 # resource "aws_route53_record" "www" {

@@ -112,7 +112,7 @@ resource "aws_cloudfront_distribution" "circles_website" {
 
 resource "aws_acm_certificate" "circles_website" {
   domain_name               = "${var.website_domain}"
-  subject_alternative_names = ["${var.website_domain}", "www.${var.website_domain}"]
+  subject_alternative_names = ["www.${var.website_domain}"]
   validation_method         = "DNS"
 
   provider = "aws.us-east-1"
@@ -129,25 +129,19 @@ resource "aws_acm_certificate" "circles_website" {
   )}"
 }
 
-resource "aws_route53_record" "certificate_validation_0" {
-  name    = "${aws_acm_certificate.circles_website.domain_validation_options.0.resource_record_name}"
-  type    = "${aws_acm_certificate.circles_website.domain_validation_options.0.resource_record_type}"
-  zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
-  records = ["${aws_acm_certificate.circles_website.domain_validation_options.0.resource_record_value}"]
-  ttl     = 60
-}
+resource "aws_route53_record" "validation" {
+  count = "${length(aws_acm_certificate.circles_website.subject_alternative_names) + 1}"
 
-resource "aws_route53_record" "certificate_validation_1" {
-  name    = "${aws_acm_certificate.circles_website.domain_validation_options.1.resource_record_name}"
-  type    = "${aws_acm_certificate.circles_website.domain_validation_options.1.resource_record_type}"
+  name    = "${lookup(aws_acm_certificate.circles_website.domain_validation_options[count.index], "resource_record_name")}"
+  type    = "${lookup(aws_acm_certificate.circles_website.domain_validation_options[count.index], "resource_record_type")}"
   zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
-  records = ["${aws_acm_certificate.circles_website.domain_validation_options.1.resource_record_value}"]
+  records = ["${lookup(aws_acm_certificate.circles_website.domain_validation_options[count.index], "resource_record_value")}"]
   ttl     = 60
 }
 
 resource "aws_acm_certificate_validation" "circles_website" {
   certificate_arn         = "${aws_acm_certificate.circles_website.arn}"
-  validation_record_fqdns = ["${aws_route53_record.certificate_validation_0.fqdn}", "${aws_route53_record.certificate_validation_1.fqdn}"]
+  validation_record_fqdns = ["${aws_route53_record.validation.*.fqdn}"]
 }
 
 # -----------------------------------------------------------
@@ -158,6 +152,10 @@ resource "aws_route53_record" "circles_website" {
   zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
   name    = "${var.website_domain}"
   type    = "A"
-  ttl     = "300"
-  records = ["${aws_cloudfront_distribution.circles_website.domain_name}"]
+
+  alias {
+    name                   = "${aws_cloudfront_distribution.circles_website.domain_name}"
+    zone_id                = "${aws_cloudfront_distribution.circles_website.hosted_zone_id}"
+    evaluate_target_health = true
+  }
 }

@@ -26,7 +26,7 @@ variable "team" {
 
 variable "project" {
   description = "Name of project."
-  default     = "circles-vpc"
+  default     = "cafe-website"
 }
 
 variable "environment" {

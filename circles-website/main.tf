@@ -46,10 +46,6 @@ resource "aws_s3_bucket" "circles_website" {
   bucket = "${var.website_domain}-content"
   acl    = "public-read"
 
-  website {
-    index_document = "index.html"
-  }
-
   tags = "${merge(
     local.common_tags,
     map(
@@ -71,9 +67,11 @@ resource "aws_cloudfront_distribution" "circles_website" {
   is_ipv6_enabled = true
 
   origin {
-    domain_name = "${aws_s3_bucket.circles_website.bucket_domain_name}"
+    domain_name = "${aws_s3_bucket.circles_website.bucket_regional_domain_name}"
     origin_id   = "${local.s3_origin_id}"
   }
+
+  default_root_object = "index.html"
 
   restrictions {
     geo_restriction {

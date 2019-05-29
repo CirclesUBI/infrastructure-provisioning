@@ -1,3 +1,7 @@
+# -----------------------------------------------------------
+# State and Providers
+# -----------------------------------------------------------
+
 terraform {
   backend "s3" {
     bucket         = "circles-website-terraform-state"
@@ -15,6 +19,13 @@ provider "aws" {
   allowed_account_ids = ["${var.aws_account_id}"]
 }
 
+provider "aws" {
+  access_key = "${var.access_key}"
+  secret_key = "${var.secret_key}"
+  region     = "us-east-1"
+  alias      = "us-east-1"
+}
+
 data "terraform_remote_state" "circles_vpc" {
   backend = "s3"
 
@@ -27,19 +38,22 @@ data "terraform_remote_state" "circles_vpc" {
   }
 }
 
-resource "aws_s3_bucket" "circles_website" {
-  bucket = "${var.website_domain}"
-  acl    = "private"
+# -----------------------------------------------------------
+# S3 Bucket
+# -----------------------------------------------------------
 
-  # website {
-  #   index_document = "${var.bucket_index_document}"
-  #   error_document = "${var.bucket_error_document}"
-  # }
+resource "aws_s3_bucket" "circles_website" {
+  bucket = "${var.website_domain}-content"
+  acl    = "public-read"
+
+  website {
+    index_document = "index.html"
+  }
 
   tags = "${merge(
     local.common_tags,
     map(
-      "name", "${var.website_domain}"
+      "name", "${var.website_domain}-content"
     )
   )}"
 }
@@ -47,6 +61,10 @@ resource "aws_s3_bucket" "circles_website" {
 locals {
   s3_origin_id = "S3-www.${var.website_domain}" // located in the console at: CloudFront Distributions > E12VI3U7WIL23J
 }
+
+# -----------------------------------------------------------
+# Cloudfront
+# -----------------------------------------------------------
 
 resource "aws_cloudfront_distribution" "circles_website" {
   enabled         = true
@@ -64,7 +82,7 @@ resource "aws_cloudfront_distribution" "circles_website" {
   }
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD", "POST"]
+    allowed_methods  = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "${local.s3_origin_id}"
 
@@ -83,16 +101,21 @@ resource "aws_cloudfront_distribution" "circles_website" {
   }
 
   viewer_certificate {
-    acm_certificate_arn = "${data.aws_acm_certificate.circles_website.arn}"
+    acm_certificate_arn = "${aws_acm_certificate.circles_website.arn}"
+    ssl_support_method  = "sni-only"
   }
 }
 
-# DNS / SSL
+# -----------------------------------------------------------
+# SSL Certificates
+# -----------------------------------------------------------
 
 resource "aws_acm_certificate" "circles_website" {
   domain_name               = "${var.website_domain}"
   subject_alternative_names = ["${var.website_domain}", "www.${var.website_domain}"]
   validation_method         = "DNS"
+
+  provider = "aws.us-east-1"
 
   lifecycle {
     create_before_destroy = true
@@ -106,7 +129,7 @@ resource "aws_acm_certificate" "circles_website" {
   )}"
 }
 
-resource "aws_route53_record" "circles_website" {
+resource "aws_route53_record" "certificate_validation_0" {
   name    = "${aws_acm_certificate.circles_website.domain_validation_options.0.resource_record_name}"
   type    = "${aws_acm_certificate.circles_website.domain_validation_options.0.resource_record_type}"
   zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
@@ -114,10 +137,22 @@ resource "aws_route53_record" "circles_website" {
   ttl     = 60
 }
 
+resource "aws_route53_record" "certificate_validation_1" {
+  name    = "${aws_acm_certificate.circles_website.domain_validation_options.1.resource_record_name}"
+  type    = "${aws_acm_certificate.circles_website.domain_validation_options.1.resource_record_type}"
+  zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
+  records = ["${aws_acm_certificate.circles_website.domain_validation_options.1.resource_record_value}"]
+  ttl     = 60
+}
+
 resource "aws_acm_certificate_validation" "circles_website" {
   certificate_arn         = "${aws_acm_certificate.circles_website.arn}"
-  validation_record_fqdns = ["${aws_route53_record.circles_website.fqdn}"]
+  validation_record_fqdns = ["${aws_route53_record.certificate_validation_0.fqdn}", "${aws_route53_record.certificate_validation_1.fqdn}"]
 }
+
+# -----------------------------------------------------------
+# DNS Alias
+# -----------------------------------------------------------
 
 resource "aws_route53_record" "circles_website" {
   zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"

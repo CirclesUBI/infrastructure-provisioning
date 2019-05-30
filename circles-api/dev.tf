@@ -69,6 +69,18 @@ resource "aws_acm_certificate_validation" "cert_validation" {
   validation_record_fqdns = ["${aws_route53_record.cert_validation_dns_record.fqdn}"]
 }
 
+resource "aws_route53_record" "circles_api" {
+  zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
+  name    = "${var.domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = "${module.ecs.alb_dns_name}"
+    zone_id                = "${module.ecs.alb_zone_id}"
+    evaluate_target_health = true
+  }
+}
+
 /*====
 Variables used across all modules
 ======*/

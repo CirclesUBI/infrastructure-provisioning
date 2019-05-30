@@ -471,10 +471,22 @@ resource "aws_acm_certificate_validation" "cert" {
   validation_record_fqdns = ["${aws_route53_record.cert_validation.fqdn}"]
 }
 
-resource "aws_route53_record" "www" {
+resource "aws_route53_record" "ipv4" {
   zone_id = "${data.aws_route53_zone.zone.zone_id}"
   name    = "chat.joincircles.net"
   type    = "A"
+
+  alias {
+    name                   = "${aws_alb.chat.dns_name}"
+    zone_id                = "${aws_alb.chat.zone_id}"
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_route53_record" "ipv6" {
+  zone_id = "${data.aws_route53_zone.zone.zone_id}"
+  name    = "chat.joincircles.net"
+  type    = "AAAA"
 
   alias {
     name                   = "${aws_alb.chat.dns_name}"

@@ -144,10 +144,10 @@ resource "aws_acm_certificate_validation" "circles_website" {
 }
 
 # -----------------------------------------------------------
-# DNS Alias
+# DNS Aliases
 # -----------------------------------------------------------
 
-resource "aws_route53_record" "ipv4" {
+resource "aws_route53_record" "apex-ipv4" {
   zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
   name    = "${var.website_domain}"
   type    = "A"
@@ -159,9 +159,33 @@ resource "aws_route53_record" "ipv4" {
   }
 }
 
-resource "aws_route53_record" "ipv6" {
+resource "aws_route53_record" "apex-ipv6" {
   zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
   name    = "${var.website_domain}"
+  type    = "AAAA"
+
+  alias {
+    name                   = "${aws_cloudfront_distribution.circles_website.domain_name}"
+    zone_id                = "${aws_cloudfront_distribution.circles_website.hosted_zone_id}"
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_route53_record" "www-ipv4" {
+  zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
+  name    = "www.${var.website_domain}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_cloudfront_distribution.circles_website.domain_name}"
+    zone_id                = "${aws_cloudfront_distribution.circles_website.hosted_zone_id}"
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_route53_record" "www-ipv6" {
+  zone_id = "${data.terraform_remote_state.circles_vpc.zone_id}"
+  name    = "www.${var.website_domain}"
   type    = "AAAA"
 
   alias {

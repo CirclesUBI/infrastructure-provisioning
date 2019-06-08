@@ -143,7 +143,6 @@ module "rds" {
   rds_instance_identifier = "${var.rds_instance_identifier}"
   availability_zones      = "${local.dev_availability_zones}"
   cidr_blocks             = "${var.rds_public_cidrs}"
-  project                 = "circles"
   project                 = "${var.project}"
   common_tags             = "${local.common_tags}"
 }

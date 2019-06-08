@@ -36,6 +36,33 @@ resource "aws_route53_zone" "joincircles" {
   )}"
 }
 
+resource "aws_route53_record" "gsuite-mx" {
+  zone_id = "${aws_route53_zone.joincircles.zone_id}"
+  name    = "${aws_route53_zone.joincircles.name}"
+  type    = "MX"
+  ttl     = 3600
+
+  records = [
+    "1 ASPMX.L.GOOGLE.COM",
+    "5 ALT1.ASPMX.L.GOOGLE.COM",
+    "5 ALT2.ASPMX.L.GOOGLE.COM",
+    "10 ASPMX2.GOOGLEMAIL.COM",
+    "10 ASPMX3.GOOGLEMAIL.COM",
+  ]
+}
+
+resource "aws_route53_record" "gsuite-spf" {
+  zone_id = "${aws_route53_zone.joincircles.zone_id}"
+  name    = "${aws_route53_zone.joincircles.name}"
+  type    = "TXT"
+  ttl     = 3600
+
+  records = [
+    "v=spf1 include:_spf.google.com ~all",
+    "v=DMARC1; p=none; rua=mailto:admin@joincircles.net",
+  ]
+}
+
 ### VPC
 
 data "aws_availability_zones" "default" {}

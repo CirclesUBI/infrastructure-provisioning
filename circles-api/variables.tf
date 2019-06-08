@@ -47,6 +47,11 @@ variable "app_version" {
   default     = "1.0.0"
 }
 
+variable "domain_name" {
+  description = "domain name for the api"
+  default     = "api.joincircles.net"
+}
+
 variable "circles_api_github_oauth_token" {
   description = "OAuth Token for the circles-api github repo. https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/"
 }

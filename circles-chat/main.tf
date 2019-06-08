@@ -425,6 +425,24 @@ resource "aws_alb_listener" "chat_http" {
   protocol          = "HTTP"
 
   default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+resource "aws_alb_listener" "chat_https" {
+  load_balancer_arn = "${aws_alb.chat.id}"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${aws_acm_certificate.cert.arn}"
+
+  default_action {
     target_group_arn = "${aws_alb_target_group.chat.id}"
     type             = "forward"
   }
@@ -453,32 +471,31 @@ resource "aws_acm_certificate_validation" "cert" {
   validation_record_fqdns = ["${aws_route53_record.cert_validation.fqdn}"]
 }
 
-resource "aws_alb_listener" "chat_https" {
-  load_balancer_arn = "${aws_alb.chat.id}"
-  port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = "${aws_acm_certificate.cert.arn}"
+resource "aws_route53_record" "ipv4" {
+  zone_id = "${data.aws_route53_zone.zone.zone_id}"
+  name    = "chat.joincircles.net"
+  type    = "A"
 
-  default_action {
-    target_group_arn = "${aws_alb_target_group.chat.id}"
-    type             = "forward"
+  alias {
+    name                   = "${aws_alb.chat.dns_name}"
+    zone_id                = "${aws_alb.chat.zone_id}"
+    evaluate_target_health = true
   }
 }
 
-# resource "aws_route53_record" "www" {
-#   zone_id = "${data.aws_route53_zone.zone.zone_id}"
-#   name    = "chat.example.com"
-#   type    = "A"
+resource "aws_route53_record" "ipv6" {
+  zone_id = "${data.aws_route53_zone.zone.zone_id}"
+  name    = "chat.joincircles.net"
+  type    = "AAAA"
 
-#   alias {
-#     name                   = "${aws_alb.chat.dns_name}"
-#     zone_id                = "${aws_alb.chat.zone_id}"
-#     evaluate_target_health = true
-#   }
-# }
+  alias {
+    name                   = "${aws_alb.chat.dns_name}"
+    zone_id                = "${aws_alb.chat.zone_id}"
+    evaluate_target_health = true
+  }
+}
 
-## CloudWatch Logs
+# CloudWatch Logs
 
 resource "aws_cloudwatch_log_group" "ecs" {
   name              = "${var.project}-chat-ecs"

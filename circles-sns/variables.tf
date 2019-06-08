@@ -39,7 +39,7 @@ variable "team" {
 
 variable "project" {
   description = "Name of project."
-  default     = "circles-vpc"
+  default     = "circles-sns"
 }
 
 variable "environment" {

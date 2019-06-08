@@ -13,3 +13,7 @@ output "cognito_app_id" {
 output "cognito_api_app_id" {
   value = "${aws_cognito_user_pool_client.circles-api.id}"
 }
+
+output "cognito_identity_pool_id" {
+  value = "${aws_cognito_identity_pool.users.id}"
+}

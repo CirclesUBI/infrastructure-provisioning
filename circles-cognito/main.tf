@@ -262,6 +262,17 @@ resource "aws_cognito_user_pool_client" "circles-api" {
   ]
 }
 
+resource "aws_cognito_identity_pool" "users" {
+  identity_pool_name               = "circles users identity pool"
+  allow_unauthenticated_identities = false
+
+  cognito_identity_providers {
+    client_id = "${aws_cognito_user_pool_client.circles-mobile.id}"
+    provider_name = "cognito-idp.${var.aws_region}.amazonaws.com/${aws_cognito_user_pool.users.id}"
+    server_side_token_check = false
+  }
+}
+
 resource "aws_iam_role" "cidp_sms" {
   name = "circles-cognito-sms-role"
   path = "/service-role/"

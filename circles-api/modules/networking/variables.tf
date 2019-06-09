@@ -1,3 +1,8 @@
+variable "common_tags" {
+  description = "Common tags."
+  type        = "map"
+}
+
 variable "vpc_id" {
   description = "The id of the vpc"
 }
@@ -16,7 +21,7 @@ variable "private_subnets_cidr" {
   description = "The CIDR block for the private subnet"
 }
 
-variable "project_prefix" {
+variable "project" {
   description = "Name prefix for resources."
 }
 
@@ -32,4 +37,3 @@ variable "availability_zones" {
   type        = "list"
   description = "The az that the resources will be launched"
 }
-

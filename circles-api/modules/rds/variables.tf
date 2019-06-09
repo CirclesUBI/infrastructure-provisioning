@@ -1,6 +1,11 @@
+variable "common_tags" {
+  description = "Common tags."
+  type        = "map"
+}
+
 variable "rds_instance_identifier" {
   description = "The identifier for the rds instance"
-} 
+}
 
 variable "database_name" {
   description = "The name of the database"
@@ -49,12 +54,7 @@ variable "cidr_blocks" {
   description = "The CIDRs for the rds subnet"
 }
 
-variable "project_prefix" {
-  description = "Name prefix for resources."
-}
-
 variable "project" {
   description = "Name of the project."
   default     = "circles"
 }
-

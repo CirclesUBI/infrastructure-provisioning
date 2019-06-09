@@ -21,5 +21,3 @@ output "db_host" {
 output "db_security_group" {
   value = "${aws_security_group.rds.id}"
 }
-
-

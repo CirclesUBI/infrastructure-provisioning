@@ -1,25 +1,27 @@
 resource "aws_subnet" "rds" {
-  count = "${length(var.availability_zones)}"
-  vpc_id = "${var.vpc_id}"
-  cidr_block = "${element(var.cidr_blocks, count.index)}"
+  count                   = "${length(var.availability_zones)}"
+  vpc_id                  = "${var.vpc_id}"
+  cidr_block              = "${element(var.cidr_blocks, count.index)}"
   map_public_ip_on_launch = true
-  availability_zone = "${element(var.availability_zones, count.index)}"
+  availability_zone       = "${element(var.availability_zones, count.index)}"
 
-  tags {
-    Project = "${var.project}"
-    Name = "${var.project_prefix}-rds-${element(var.availability_zones, count.index)}"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-rds-${element(var.availability_zones, count.index)}"
+    )
+  )}"
 }
 
 resource "aws_route_table" "rds" {
   vpc_id = "${var.vpc_id}"
 
-  tags {
-    Project     = "${var.project}"
-    Name        = "${var.project_prefix}-rds-route-table"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-rds-route-table"
+    )
+  )}"
 }
 
 resource "aws_route" "public_internet_gateway" {
@@ -35,70 +37,77 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_db_subnet_group" "default" {
-  name = "${var.project_prefix}-${var.rds_instance_identifier}-subnet-group"
+  name        = "${var.project}-${var.rds_instance_identifier}-subnet-group"
   description = "RDS subnet group"
-  subnet_ids = ["${aws_subnet.rds.*.id}"]
+  subnet_ids  = ["${aws_subnet.rds.*.id}"]
 
-  tags {
-    Project     = "${var.project}"
-    Name        = "${var.project_prefix}-rds-subnet-group"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-rds-subnet-group"
+    )
+  )}"
 }
 
 resource "aws_security_group" "rds" {
-  name = "${var.project_prefix}-rds-sg"
+  name        = "${var.project}-rds-sg"
   description = "RDS PostgreSQL"
-  vpc_id = "${var.vpc_id}"
+  vpc_id      = "${var.vpc_id}"
+
   # Keep the instance private by only allowing traffic from the web server.
   ingress {
-    from_port = 5432
-    to_port = 5432
-    protocol = "tcp"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+
     // security_groups = ["${var.security_group_ids}"]
   }
+
   # Allow all outbound traffic.
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    Project     = "${var.project}"
-    Name        = "${var.project_prefix}-rds-sg"
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-rds-sg"
+    )
+  )}"
 }
 
 resource "aws_db_instance" "default" {
-  name = "${var.database_name}"
-  identifier = "${var.rds_instance_identifier}"
-  allocated_storage = "${var.allocated_storage}"
-  engine = "postgres"
-  engine_version = "10.6"
-  instance_class = "${var.instance_class}"  
-  username = "${var.database_user}"
-  password = "${var.database_password}"
-  db_subnet_group_name = "${aws_db_subnet_group.default.id}"
-  vpc_security_group_ids = ["${aws_security_group.rds.id}"]
-  skip_final_snapshot = true
+  name                      = "${var.database_name}"
+  identifier                = "${var.rds_instance_identifier}"
+  allocated_storage         = "${var.allocated_storage}"
+  engine                    = "postgres"
+  engine_version            = "10.6"
+  instance_class            = "${var.instance_class}"
+  username                  = "${var.database_user}"
+  password                  = "${var.database_password}"
+  db_subnet_group_name      = "${aws_db_subnet_group.default.id}"
+  vpc_security_group_ids    = ["${aws_security_group.rds.id}"]
+  skip_final_snapshot       = true
   final_snapshot_identifier = "Ignore"
-  publicly_accessible = true
+  publicly_accessible       = true
 
-  tags {
-    Project     = "${var.project}"
-    Name        = "${var.project_prefix}-rds"    
-    Environment = "${var.environment}"
-  }
+  tags = "${merge(
+    var.common_tags,
+    map(
+      "name", "${var.project}-rds"
+    )
+  )}"
 }
 
 resource "aws_db_parameter_group" "default" {
-  name = "${var.rds_instance_identifier}-param-group"
+  name        = "${var.rds_instance_identifier}-param-group"
   description = "Parameter group for postgres9.6"
-  family = "postgres9.6"
+  family      = "postgres9.6"
+
   # parameter {
   #   name = "character_set_server"
   #   value = "utf8"

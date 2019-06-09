@@ -19,3 +19,8 @@
 **/state-files/
 
 # temp
+rocketchat/
+cognito/
+
+# Secrets
+**/*.kdbx

@@ -1,3 +1,12 @@
+locals {
+  common_tags = {
+    team              = "${var.team}"
+    project           = "${var.project}"
+    environment       = "${var.environment}"
+    emergency_contact = "${var.emergency_contact}"
+  }
+}
+
 variable "access_key" {
   description = "AWS access key"
 }
@@ -8,10 +17,18 @@ variable "secret_key" {
 
 variable "aws_region" {
   description = "The AWS region to create things in."
-  default     = "eu-central-1"
 }
 
-variable "project_prefix" {
+variable "aws_account_id" {
+  description = "The AWS account ID."
+}
+
+variable "team" {
+  description = "Owner of resources."
+  default     = "circles"
+}
+
+variable "project" {
   description = "Name prefix for resources."
   default     = "circles-api"
 }
@@ -21,13 +38,18 @@ variable "environment" {
   default     = "dev"
 }
 
+variable "emergency_contact" {
+  description = "Who to call if there is an emergency."
+}
+
 variable "app_version" {
   description = "App Version."
   default     = "1.0.0"
 }
 
-variable "availability_zones" {
-  default = ["eu-central-1a", "eu-central-1b"]
+variable "domain_name" {
+  description = "domain name for the api"
+  default     = "api.joincircles.net"
 }
 
 variable "circles_api_github_oauth_token" {
@@ -36,7 +58,7 @@ variable "circles_api_github_oauth_token" {
 
 variable "rds_instance_identifier" {
   description = "The identifier for the rds instance"
-} 
+}
 
 variable "database_name" {
   description = "The name of the database"

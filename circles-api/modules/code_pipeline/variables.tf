@@ -10,7 +10,7 @@ variable "image_name" {
   description = "The name of the docker image ECR"
 }
 
-variable "project_prefix" {
+variable "project" {
   description = "Name prefix for resources."
 }
 
@@ -46,7 +46,6 @@ variable "github_oauth_token" {
 variable "github_branch" {
   description = "The github branch to pull code from"
 }
-
 
 variable "database_name" {
   description = "Database name for the api"

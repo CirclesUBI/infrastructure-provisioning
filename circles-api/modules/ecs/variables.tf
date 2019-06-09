@@ -1,8 +1,13 @@
+variable "common_tags" {
+  description = "Common tags."
+  type        = "map"
+}
+
 variable "vpc_id" {
   description = "The VPC id"
 }
 
-variable "project_prefix" {
+variable "project" {
   description = "Name prefix for resources."
 }
 
@@ -79,7 +84,7 @@ variable "private_key" {
 }
 
 variable "ssl_certificate_arn" {
-  description = "SSL Cert for the API"  
+  description = "SSL Cert for the API"
 }
 
 variable "blockchain_network_id" {

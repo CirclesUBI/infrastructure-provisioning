@@ -1,3 +1,12 @@
+locals {
+  common_tags = {
+    team              = "${var.team}"
+    project           = "${var.project}"
+    environment       = "${var.environment}"
+    emergency_contact = "${var.emergency_contact}"
+  }
+}
+
 variable "access_key" {
   description = "AWS access key"
 }
@@ -8,12 +17,24 @@ variable "secret_key" {
 
 variable "aws_region" {
   description = "The AWS region to create things in."
-  default     = "eu-central-1"
 }
 
-variable "project_prefix" {
-  description = "Name prefix for resources."
-  default     = "circles-backend"
+variable "aws_account_id" {
+  description = "The AWS account ID."
+}
+
+variable "team" {
+  description = "Owner of resources."
+  default     = "circles"
+}
+
+variable "project" {
+  description = "Name of project."
+  default     = "circles-chat"
+}
+
+variable "emergency_contact" {
+  description = "Who to call if there is an emergency."
 }
 
 variable "environment" {
@@ -59,24 +80,4 @@ variable "smtp_username" {
 
 variable "smtp_password" {
   description = "SMTP password"
-}
-
-variable "ubibot_password" {
-  description = "ubibot password"
-}
-
-variable "ubibot_github_user" {
-  description = "ubibot github username"
-}
-
-variable "ubibot_github_password" {
-  description = "ubibot github password"
-}
-
-variable "redis_commander_user" {
-  description = "redis commander user"
-}
-
-variable "redis_commander_pass" {
-  description = "redis commander password"
 }

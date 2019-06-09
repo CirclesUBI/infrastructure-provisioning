@@ -22,15 +22,8 @@ variable "default_role" {
 EOF
 }
 
-// ethstats
-
-# resource "aws_iam_instance_profile" "rocketchat" {
-#   name = "rocketchat"
-#   role = "${aws_iam_role.rocketchat.name}"
-# }
-
-resource "aws_iam_role" "rocketchat" {
-  name               = "rocketchat"
+resource "aws_iam_role" "chat" {
+  name               = "chat"
   assume_role_policy = "${var.default_role}"
 }
 
@@ -38,16 +31,14 @@ resource "aws_iam_role" "rocketchat" {
 // Policies
 // -----------------------------------------------------------------------------
 
-// Read ws_secret For Ethstats
-
-resource "aws_iam_policy_attachment" "rocketchat" {
-  name       = "rocketchat"
-  roles      = ["${aws_iam_role.rocketchat.name}"]
-  policy_arn = "${aws_iam_policy.rocketchat.arn}"
+resource "aws_iam_policy_attachment" "chat" {
+  name       = "chat"
+  roles      = ["${aws_iam_role.chat.name}"]
+  policy_arn = "${aws_iam_policy.chat.arn}"
 }
 
-resource "aws_iam_policy" "rocketchat" {
-  name = "rocketchat"
+resource "aws_iam_policy" "chat" {
+  name = "chat"
 
   policy = <<EOF
 {
@@ -65,8 +56,8 @@ EOF
 
 // Write Cloudwatch Logs
 
-resource "aws_iam_policy_attachment" "rocketchat_logging" {
-  name       = "rocketchat-logging"
-  roles      = ["${aws_iam_role.rocketchat.name}"]
+resource "aws_iam_policy_attachment" "chat_logging" {
+  name       = "chat-logging"
+  roles      = ["${aws_iam_role.chat.name}"]
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }

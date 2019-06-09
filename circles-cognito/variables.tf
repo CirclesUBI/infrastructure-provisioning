@@ -16,11 +16,11 @@ variable "secret_key" {
 }
 
 variable "aws_region" {
-  description = "The AWS region to create things in."
+  description = "The AWS region to create the resources in."
 }
 
 variable "aws_account_id" {
-  description = "The AWS Account to use."
+  description = "The AWS account ID."
 }
 
 variable "team" {
@@ -29,8 +29,12 @@ variable "team" {
 }
 
 variable "project" {
-  description = "Name of project."
-  default     = "cafe-website"
+  description = "Project name."
+  default     = "circles-cognito"
+}
+
+variable "emergency_contact" {
+  description = "Who to call if there is an emergency."
 }
 
 variable "environment" {
@@ -38,18 +42,14 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "emergency_contact" {
-  description = "Who to contact in an emergency."
-}
+variable "password_policy_minimum_length" {}
 
-variable "blueprint_id" {
-  description = "Blueprint for lightsail instance."
-}
+variable "password_policy_require_lowercase" {}
 
-variable "instance_size" {
-  description = "Size of lightsail instance"
-}
+variable "password_policy_require_symbols" {}
 
-variable "website_domain" {
-  description = "Domain of the website."
-}
+variable "password_policy_require_uppercase" {}
+
+variable "password_policy_require_numbers" {}
+
+variable "sms_configuration_external_id" {}

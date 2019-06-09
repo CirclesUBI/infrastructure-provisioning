@@ -29,4 +29,3 @@ output "db_host" {
 output "db_security_group" {
   value = "${module.rds.db_security_group}"
 }
-

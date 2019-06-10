@@ -17,12 +17,12 @@ provider "aws" {
 
 resource "aws_cognito_user_pool" "users" {
   name                       = "circles-mobile-userpool"
+  alias_attributes           = ["phone_number"]
   email_verification_subject = "Your Circles verification code"
   email_verification_message = "Your Circles verification code is {####}. "
   sms_authentication_message = "Your Circles authentication code is {####}. "
-  sms_verification_message   = "Your Circles verification code is {####}. "
-  username_attributes        = ["phone_number"]
-  auto_verified_attributes   = ["email"]
+  sms_verification_message   = "Your Circles verification code is {####}. "  
+  auto_verified_attributes   = ["email", "phone_number"]
   mfa_configuration          = "OPTIONAL"
 
   verification_message_template {
@@ -43,8 +43,21 @@ resource "aws_cognito_user_pool" "users" {
   }
 
   device_configuration {
-    challenge_required_on_new_device      = false
+    challenge_required_on_new_device      = true
     device_only_remembered_on_user_prompt = false
+  }
+
+  schema {
+    attribute_data_type      = "String"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "phone_number"
+    required                 = true
+
+    string_attribute_constraints {
+      max_length = 64
+      min_length = 8
+    }
   }
 
   schema {
@@ -57,6 +70,32 @@ resource "aws_cognito_user_pool" "users" {
     string_attribute_constraints {
       max_length = 2048
       min_length = 0
+    }
+  }
+
+  schema {
+    attribute_data_type      = "String"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "name"
+    required                 = false
+
+    string_attribute_constraints {
+      max_length = 64
+      min_length = 4
+    }
+  }
+
+  schema {
+    attribute_data_type      = "String"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "email"
+    required                 = true
+
+    string_attribute_constraints {
+      max_length = 256
+      min_length = 6
     }
   }
 
@@ -86,59 +125,6 @@ resource "aws_cognito_user_pool" "users" {
     }
   }
 
-  schema {
-    attribute_data_type      = "String"
-    developer_only_attribute = false
-    mutable                  = true
-    name                     = "phone_number"
-    required                 = true
-
-    string_attribute_constraints {
-      max_length = 64
-      min_length = 8
-    }
-  }
-
-  schema {
-    attribute_data_type      = "String"
-    developer_only_attribute = false
-    mutable                  = true
-    name                     = "name"
-    required                 = true
-
-    string_attribute_constraints {
-      max_length = 64
-      min_length = 2
-    }
-  }
-
-  schema {
-    attribute_data_type      = "String"
-    developer_only_attribute = false
-    mutable                  = true
-    name                     = "email"
-    required                 = true
-
-    string_attribute_constraints {
-      max_length = 256
-      min_length = 6
-    }
-  }
-  
-  schema {
-    attribute_data_type      = "String"
-    developer_only_attribute = false
-    mutable                  = true
-    name                     = "preferred_username"
-    required                 = true
-
-    string_attribute_constraints {
-      max_length = 24
-      min_length = 2
-    }
-  }
-  
-
   tags = "${merge(
     local.common_tags,
     map(
@@ -153,23 +139,21 @@ resource "aws_cognito_user_pool_client" "circles-mobile" {
   user_pool_id           = "${aws_cognito_user_pool.users.id}"
 
   read_attributes = [
-    "preferred_username",
+    "custom:agreed_to_disclaimer",
+    "custom:device_id",
+    "email",
     "name",
     "phone_number",
-    "custom:device_id",
-    "custom:agreed_to_disclaimer",
-    "picture",
-    "email"
+    "picture"
   ]
 
   write_attributes = [
-    "preferred_username",
+    "custom:agreed_to_disclaimer",
+    "custom:device_id",
+    "email",
     "name",
     "phone_number",
-    "custom:device_id",
-    "custom:agreed_to_disclaimer",
-    "picture",
-    "email"
+    "picture"
   ]
 }
 
@@ -180,49 +164,49 @@ resource "aws_cognito_user_pool_client" "circles-api" {
   user_pool_id           = "${aws_cognito_user_pool.users.id}"
 
   read_attributes = [
-    "given_name",
-    "email_verified",
-    "zoneinfo",
-    "website",
-    "preferred_username",
-    "name",
-    "locale",
-    "phone_number",
-    "family_name",
-    "custom:device_id",
+    "address",
     "birthdate",
     "custom:agreed_to_disclaimer",
-    "middle_name",
-    "phone_number_verified",
-    "profile",
-    "picture",
-    "address",
-    "gender",
-    "updated_at",
-    "nickname",
+    "custom:device_id",
+    "email_verified",
     "email",
+    "family_name",
+    "gender",
+    "given_name",
+    "locale",
+    "middle_name",
+    "name",
+    "nickname",
+    "phone_number_verified",
+    "phone_number",
+    "picture",
+    "preferred_username",
+    "profile",
+    "updated_at",
+    "website",
+    "zoneinfo",
   ]
 
   write_attributes = [
-    "given_name",
-    "zoneinfo",
-    "website",
-    "preferred_username",
-    "name",
-    "locale",
-    "phone_number",
-    "family_name",
-    "custom:device_id",
+    "address",
     "birthdate",
     "custom:agreed_to_disclaimer",
-    "middle_name",
-    "profile",
-    "picture",
-    "address",
-    "gender",
-    "updated_at",
-    "nickname",
+    "custom:device_id",
     "email",
+    "family_name",
+    "gender",
+    "given_name",
+    "locale",
+    "middle_name",
+    "name",
+    "nickname",
+    "phone_number",
+    "picture",
+    "preferred_username",
+    "profile",
+    "updated_at",
+    "website",
+    "zoneinfo",
   ]
 }
 
@@ -289,9 +273,9 @@ resource "aws_cognito_user_group" "user" {
   user_pool_id = "${aws_cognito_user_pool.users.id}"
 }
 
-resource "aws_cognito_user_group" "test" {
-  name        = "test"
-  description = "test user for integration and development"
+resource "aws_cognito_user_group" "admin" {
+  name        = "admin"
+  description = "Admin user for development"
   precedence  = 1
 
   # role_arn     =

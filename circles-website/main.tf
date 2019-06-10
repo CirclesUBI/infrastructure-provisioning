@@ -66,6 +66,8 @@ resource "aws_cloudfront_distribution" "circles_website" {
   enabled         = true
   is_ipv6_enabled = true
 
+  aliases = ["${var.website_domain}", "www.${var.website_domain}"]
+
   origin {
     domain_name = "${aws_s3_bucket.circles_website.bucket_regional_domain_name}"
     origin_id   = "${local.s3_origin_id}"

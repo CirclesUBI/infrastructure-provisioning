@@ -8,8 +8,12 @@ phases:
       - export API_VERSION
       - echo Installing node packages ...      
       - npm install
+      - echo Installing meta-tx server ...
+      - cd src/connections/metatx-server
+      - git clone https://github.com/CirclesUBI/metatx-server.git .
+      - npm install
+      - cd ../../..
       - echo Installing and compiling contracts ...
-      - mkdir contracts
       - cd contracts
       - npm install -g ganache-cli
       - nohup ganache-cli -i ${blockchain_network_id} &

@@ -130,7 +130,7 @@ resource "aws_codebuild_project" "test" {
     }
 
     environment_variable {
-      name  = "PRIVATE_KEY"
+      name  = "API_PRIV_KEY"
       value = "${var.private_key}"
     }
 

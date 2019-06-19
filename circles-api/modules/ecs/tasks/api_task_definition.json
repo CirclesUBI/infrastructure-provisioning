@@ -52,7 +52,7 @@
         "value": "${android_platform_gcm_arn}"
       },
       {
-        "name": "PRIVATE_KEY",
+        "name": "API_PRIV_KEY",
         "value": "${private_key}"
       },
       {
@@ -68,5 +68,26 @@
         "value": "${cognito_pool_jwt_n}"
       }
     ]
+  },
+  {
+    "name": "ganache-cli",
+    "image": "trufflesuite/ganache-cli:latest",
+    "portMappings": [
+      {
+        "containerPort": 8545,
+        "hostPort": 8545
+      }
+    ],
+    "memory": 300,
+    "networkMode": "awsvpc",
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group_name}",
+        "awslogs-region": "${log_group_region}",
+        "awslogs-stream-prefix": "ganache"
+      }
+    },
+    "command": ["-m 'enable depend figure right kit daughter job giraffe news window tonight more'"]
   }
 ]

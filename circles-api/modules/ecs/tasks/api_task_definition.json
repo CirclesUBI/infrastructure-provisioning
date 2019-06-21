@@ -1,14 +1,15 @@
 [
   {
     "name": "circles-api-ecr",
+    "depends_on": "ganache",
+    "command": ["npm", "run", "staging"],
     "image": "${image}",
     "portMappings": [
       {
-        "containerPort": 8080,
-        "hostPort": 8080
+        "containerPort": 8080
       }
     ],
-    "memory": 300,
+    "memory": 750,
     "networkMode": "awsvpc",
     "logConfiguration": {
       "logDriver": "awslogs",
@@ -66,16 +67,19 @@
       {
         "name" : "COGNITO_POOL_JWT_N",
         "value": "${cognito_pool_jwt_n}"
+      },
+      {
+        "name" : "HUB_CONTRACT_ADDRESS",
+        "value": "${hub_contract_address}"
       }
     ]
   },
   {
-    "name": "ganache-cli",
+    "name": "ganache",
     "image": "trufflesuite/ganache-cli:latest",
     "portMappings": [
       {
-        "containerPort": 8545,
-        "hostPort": 8545
+        "containerPort": 8545
       }
     ],
     "memory": 300,
@@ -88,6 +92,6 @@
         "awslogs-stream-prefix": "ganache"
       }
     },
-    "command": ["-m 'enable depend figure right kit daughter job giraffe news window tonight more'"]
+    "command": ["-i ${blockchain_network_id}", "-m 'enable depend figure right kit daughter job giraffe news window tonight more'"]
   }
 ]

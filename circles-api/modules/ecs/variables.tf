@@ -90,3 +90,7 @@ variable "ssl_certificate_arn" {
 variable "blockchain_network_id" {
   description = "Port number of blockchain network interface"
 }
+
+variable "hub_contract_address" {
+  description = "Contract address of Circles Hub"
+}

@@ -171,4 +171,5 @@ module "ecs" {
   ssl_certificate_arn      = "${aws_acm_certificate.cert.arn}"
   blockchain_network_id    = "${var.blockchain_network_id}"
   common_tags              = "${local.common_tags}"
+  hub_contract_address     = "${var.hub_contract_address}"
 }

@@ -6,22 +6,14 @@ phases:
       - echo Entered the pre_build phase...  
       - API_VERSION="v$( node -p "require('./package.json').version" )"
       - export API_VERSION
-      - echo Installing node packages ...      
+      - echo Installing node packages ...
       - npm install
-      - echo Installing meta-tx server ...
-      - cd src/connections/metatx-server
-      - git clone https://github.com/CirclesUBI/metatx-server.git .
-      - npm install
-      - cd ../../..
       - echo Installing and compiling contracts ...
       - cd contracts
-      - npm install -g ganache-cli
-      - nohup ganache-cli -i ${blockchain_network_id} &
-      - git clone https://github.com/CirclesUBI/circles-contracts.git .
+      - git clone -b master --single-branch https://github.com/CirclesUBI/circles-contracts.git .
       - npm install
-      - npm install websocket
-      - npx truffle compile
-      - npx truffle migrate
+      - npm run ganache:ci
+      - npx truffle migrate --reset --compile-all
       - cd ..
   build:
     commands:

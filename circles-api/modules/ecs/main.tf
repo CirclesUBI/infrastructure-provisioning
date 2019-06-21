@@ -50,6 +50,7 @@ data "template_file" "api_task" {
     cognito_pool_jwt_n       = "${var.cognito_pool_jwt_n}"
     private_key              = "${var.private_key}"
     blockchain_network_id    = "${var.blockchain_network_id}"
+    hub_contract_address     = "${var.hub_contract_address}"    
   }
 }
 
@@ -59,7 +60,7 @@ resource "aws_ecs_task_definition" "circles_api" {
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = "256"
-  memory                   = "512"
+  memory                   = "1024"
   execution_role_arn       = "${aws_iam_role.ecs_execution_role.arn}"
   task_role_arn            = "${aws_iam_role.ecs_execution_role.arn}"
 }
@@ -108,6 +109,8 @@ resource "aws_ecs_service" "circles_api" {
   desired_count   = 2
   launch_type     = "FARGATE"
   cluster         = "${aws_ecs_cluster.circles_api.id}"
+
+  health_check_grace_period_seconds = 180
   
   network_configuration {
     security_groups = ["${var.security_groups_ids}", "${aws_security_group.ecs_service.id}"]

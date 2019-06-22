@@ -27,45 +27,6 @@ resource "aws_ecs_cluster" "circles_api" {
 }
 
 /*====
-ECS task definitions
-======*/
-
-/* the task definition for the api service */
-data "template_file" "api_task" {
-  template = "${file("${path.module}/tasks/api_task_definition.json")}"
-
-  vars {
-    image                    = "${aws_ecr_repository.circles_api.repository_url}"
-    log_group_name           = "${aws_cloudwatch_log_group.circles_api.name}"
-    log_group_region         = "${var.region}"
-    cognito_pool_id          = "${var.cognito_pool_id}"
-    region                   = "${var.region}"
-    database_name            = "${var.database_name}"
-    database_user            = "${var.database_user}"
-    database_host            = "${var.database_host}"
-    database_password        = "${var.database_password}"
-    database_port            = "${var.database_port}"
-    android_platform_gcm_arn = "${var.android_platform_gcm_arn}"
-    cognito_pool_jwt_kid     = "${var.cognito_pool_jwt_kid}"
-    cognito_pool_jwt_n       = "${var.cognito_pool_jwt_n}"
-    private_key              = "${var.private_key}"
-    blockchain_network_id    = "${var.blockchain_network_id}"
-    hub_contract_address     = "${var.hub_contract_address}"    
-  }
-}
-
-resource "aws_ecs_task_definition" "circles_api" {
-  family                   = "circles_api"
-  container_definitions    = "${data.template_file.api_task.rendered}"
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  cpu                      = "256"
-  memory                   = "1024"
-  execution_role_arn       = "${aws_iam_role.ecs_execution_role.arn}"
-  task_role_arn            = "${aws_iam_role.ecs_execution_role.arn}"
-}
-
-/*====
 ECS service
 ======*/
 
@@ -97,53 +58,9 @@ resource "aws_security_group" "ecs_service" {
   )}"
 }
 
-/* Simply specify the family to find the latest ACTIVE revision in that family */
-data "aws_ecs_task_definition" "circles_api" {
-  depends_on      = ["aws_ecs_task_definition.circles_api"]
-  task_definition = "${aws_ecs_task_definition.circles_api.family}"
-}
-
-resource "aws_ecs_service" "circles_api" {
-  name            = "${var.project}-ecs-service"
-  task_definition = "${aws_ecs_task_definition.circles_api.family}:${max("${aws_ecs_task_definition.circles_api.revision}", "${data.aws_ecs_task_definition.circles_api.revision}")}"
-  desired_count   = 2
-  launch_type     = "FARGATE"
-  cluster         = "${aws_ecs_cluster.circles_api.id}"
-
-  health_check_grace_period_seconds = 180
-  
-  network_configuration {
-    security_groups = ["${var.security_groups_ids}", "${aws_security_group.ecs_service.id}"]
-    subnets         = ["${var.subnets_ids}"]
-  }
-
-  load_balancer {
-    target_group_arn = "${aws_alb_target_group.circles_api.arn}"
-    container_name   = "circles-api-ecr"
-    container_port   = "8080"
-  }
-
-  depends_on = ["aws_alb_target_group.circles_api", "aws_iam_role_policy.ecs_service_role_policy"]
-}
-
 /*====
 App Load Balancer
 ======*/
-resource "random_id" "target_group_sufix" {
-  byte_length = 2
-}
-
-resource "aws_alb_target_group" "circles_api" {
-  name        = "${var.project}-${var.environment}-alb-tg"
-  port        = 8080
-  protocol    = "HTTP"
-  vpc_id      = "${var.vpc_id}"
-  target_type = "ip"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
 
 /* security group for ALB */
 resource "aws_security_group" "api_inbound_sg" {
@@ -152,8 +69,22 @@ resource "aws_security_group" "api_inbound_sg" {
   vpc_id      = "${var.vpc_id}"
 
   ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
     from_port   = 443
     to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 8545
+    to_port     = 8545
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -193,10 +124,29 @@ resource "aws_alb" "circles_api" {
   )}"
 }
 
+resource "random_id" "target_group_sufix" {
+  byte_length = 2
+  count = 2
+}
+
+
+resource "aws_alb_target_group" "circles_api" {
+  name        = "api-${var.environment}-alb-tg-${random_id.target_group_sufix.0.hex}"
+  port        = 8080
+  protocol    = "HTTP"
+  vpc_id      = "${var.vpc_id}"
+  target_type = "ip"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_alb_listener" "circles_api_http" {
   load_balancer_arn = "${aws_alb.circles_api.arn}"
   port              = "80"
   protocol          = "HTTP"
+  depends_on        = ["aws_alb_target_group.circles_api"]
 
   default_action {
     type = "redirect"
@@ -207,11 +157,6 @@ resource "aws_alb_listener" "circles_api_http" {
       status_code = "HTTP_301"
     }
   }
-
-  # default_action {
-  #   target_group_arn = "${aws_alb_target_group.circles_api.arn}"
-  #   type             = "forward"
-  # }
 }
 
 resource "aws_alb_listener" "circles_api_https" {
@@ -225,6 +170,54 @@ resource "aws_alb_listener" "circles_api_https" {
   default_action {
     target_group_arn = "${aws_alb_target_group.circles_api.arn}"
     type             = "forward"
+  }
+}
+
+resource "aws_alb_listener" "ganache_http" {
+  load_balancer_arn = "${aws_alb.circles_api.arn}"
+  port              = "8545"
+  protocol          = "HTTP"
+  depends_on        = ["aws_alb_target_group.ganache"]
+
+  default_action {
+    target_group_arn = "${aws_alb_target_group.ganache.arn}"
+    type             = "forward"
+  }
+}
+
+# resource "aws_alb_listener" "ganache_https" {
+#   load_balancer_arn = "${aws_alb.circles_api.arn}"
+#   port              = "8545"
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2016-08"
+#   certificate_arn   = "${var.ssl_certificate_arn}"
+#   depends_on        = ["aws_alb_target_group.ganache"]
+
+#   default_action {
+#     target_group_arn = "${aws_alb_target_group.ganache.arn}"
+#     type             = "forward"
+#   }
+# }
+
+## ALB Target for API
+resource "aws_alb_target_group" "ganache" {
+  name        = "ganache-${var.environment}-alb-tg-${random_id.target_group_sufix.1.hex}"
+  port = 5678
+  protocol = "HTTP"
+  vpc_id = "${var.vpc_id}"
+  target_type = "ip"
+
+  // deregistration_delay = 30
+
+  # health_check {
+  #   path = "/api/v1/status"
+  #   healthy_threshold = 2
+  #   unhealthy_threshold = 2
+  #   interval = 90
+  # }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

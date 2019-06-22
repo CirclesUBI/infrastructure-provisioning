@@ -1,9 +1,8 @@
 [
   {
     "name": "circles-api-ecr",
-    "depends_on": "ganache",
     "command": ["npm", "run", "staging"],
-    "image": "${image}",
+    "image": "${image}",    
     "portMappings": [
       {
         "containerPort": 8080
@@ -73,25 +72,5 @@
         "value": "${hub_contract_address}"
       }
     ]
-  },
-  {
-    "name": "ganache",
-    "image": "trufflesuite/ganache-cli:latest",
-    "portMappings": [
-      {
-        "containerPort": 8545
-      }
-    ],
-    "memory": 300,
-    "networkMode": "awsvpc",
-    "logConfiguration": {
-      "logDriver": "awslogs",
-      "options": {
-        "awslogs-group": "${log_group_name}",
-        "awslogs-region": "${log_group_region}",
-        "awslogs-stream-prefix": "ganache"
-      }
-    },
-    "command": ["-i ${blockchain_network_id}", "-m 'enable depend figure right kit daughter job giraffe news window tonight more'"]
   }
 ]
